@@ -29,6 +29,9 @@ export class IdentityFirestoreRepository implements IdentityRepository {
         docs.map((doc) => ({
           id: asString(doc['id']),
           type: 'user' as const,
+          organizationIds: asStringArray(doc['organizationIds']),
+          teamIds: asStringArray(doc['teamIds']),
+          partnerIds: asStringArray(doc['partnerIds']),
           workspaceIds: asStringArray(doc['workspaceIds']),
         })),
       ),
@@ -43,6 +46,8 @@ export class IdentityFirestoreRepository implements IdentityRepository {
           id: asString(doc['id']),
           type: 'organization' as const,
           memberIds: asStringArray(doc['memberIds']),
+          teamIds: asStringArray(doc['teamIds']),
+          partnerIds: asStringArray(doc['partnerIds']),
           workspaceIds: asStringArray(doc['workspaceIds']),
         })),
       ),

@@ -196,7 +196,7 @@ User Action → Method Call → rxMethod → patchState → Signal Update → UI
 
 ```
 1. User enters credentials
-2. Component calls AuthStore.login()
+2. Component calls AuthStore.signIn() / AuthStore.signUp()
 3. rxMethod handles async Firebase auth
 4. Success → patchState updates user signal
 5. Signal update triggers change detection
@@ -204,6 +204,13 @@ User Action → Method Call → rxMethod → patchState → Signal Update → UI
 ```
 
 AuthStore is backed by an AngularFire Auth repository that exposes `authState`, sign-in, sign-up, sign-out, password reset, and profile update flows via observables.
+
+### Auth Routes
+
+- `/auth/login` — Sign in (demo: demo@test.com / 123123)
+- `/auth/register` — Register and persist `/users/{uid}` in Firestore
+- `/auth/reset` — Send password reset email
+- `/app` — Authenticated landing page
 
 ## 🧪 Testing
 
