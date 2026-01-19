@@ -21,6 +21,28 @@ export const APP_ROUTES: Routes = [
       ),
   },
   {
+    path: 'workspace/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./layouts/workspace-layout/workspace-layout.component').then(
+        (module) => module.WorkspaceLayoutComponent,
+      ),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'overview',
+      },
+      {
+        path: ':module',
+        loadComponent: () =>
+          import('./pages/module-host/module-host-page.component').then(
+            (module) => module.ModuleHostPageComponent,
+          ),
+      },
+    ],
+  },
+  {
     path: '**',
     redirectTo: 'auth/login',
   },

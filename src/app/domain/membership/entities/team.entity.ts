@@ -7,29 +7,37 @@ import type { MembershipId } from '../value-objects/membership-id.value-object';
 export class Team {
   readonly id: MembershipId;
   readonly type: 'team' = 'team';
+  readonly name: string;
   readonly organizationId: string;
   readonly memberIds: ReadonlyArray<string>;
 
   private constructor(props: {
     id: MembershipId;
+    name: string;
     organizationId: string;
     memberIds: ReadonlyArray<string>;
   }) {
     if (!props.organizationId || props.organizationId.trim().length === 0) {
       throw new Error('Team must belong to an organization');
     }
+    if (!props.name || props.name.trim().length === 0) {
+      throw new Error('Team name cannot be empty');
+    }
     this.id = props.id;
+    this.name = props.name;
     this.organizationId = props.organizationId;
     this.memberIds = props.memberIds;
   }
 
   static create(props: {
     id: MembershipId;
+    name: string;
     organizationId: string;
     memberIds?: ReadonlyArray<string>;
   }): Team {
     return new Team({
       id: props.id,
+      name: props.name,
       organizationId: props.organizationId,
       memberIds: props.memberIds ?? [],
     });

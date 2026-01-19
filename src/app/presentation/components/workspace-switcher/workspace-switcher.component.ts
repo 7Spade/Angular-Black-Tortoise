@@ -31,7 +31,7 @@ export class WorkspaceSwitcherComponent {
   // Group workspaces by source
   readonly workspaceGroups = computed<WorkspaceGroup[]>(() => {
     const allWorkspaces = this.workspaceStore.workspaces();
-    const currentOwner = this.workspaceStore.currentWorkspaceOwner();
+    const currentOwner = this.workspaceStore.activeOwner();
 
     if (!currentOwner) {
       return [];
@@ -42,8 +42,8 @@ export class WorkspaceSwitcherComponent {
     // Owned workspaces (where user is the owner)
     const owned = allWorkspaces.filter(
       (w) =>
-        w.owner.ownerId === currentOwner.ownerId &&
-        w.owner.ownerType === currentOwner.ownerType
+        w.owner.getOwnerId() === currentOwner.ownerId &&
+        w.owner.getOwnerType() === currentOwner.ownerType
     );
 
     if (owned.length > 0) {
@@ -58,9 +58,9 @@ export class WorkspaceSwitcherComponent {
     const member = allWorkspaces.filter(
       (w) =>
         !(
-          w.owner.ownerId === currentOwner.ownerId &&
-          w.owner.ownerType === currentOwner.ownerType
-        ) && w.owner.ownerType === 'organization'
+          w.owner.getOwnerId() === currentOwner.ownerId &&
+          w.owner.getOwnerType() === currentOwner.ownerType
+        ) && w.owner.getOwnerType() === 'organization'
     );
 
     if (member.length > 0) {
@@ -71,35 +71,14 @@ export class WorkspaceSwitcherComponent {
       });
     }
 
-    // Team workspaces
-    const team = allWorkspaces.filter((w) => w.owner.ownerType === 'team');
-
-    if (team.length > 0) {
-      groups.push({
-        label: 'Team',
-        icon: 'groups',
-        workspaces: team,
-      });
-    }
-
-    // Partner workspaces
-    const partner = allWorkspaces.filter(
-      (w) => w.owner.ownerType === 'partner'
-    );
-
-    if (partner.length > 0) {
-      groups.push({
-        label: 'Partner',
-        icon: 'handshake',
-        workspaces: partner,
-      });
-    }
+    // Note: WorkspaceOwnerType only supports 'user' and 'organization'
+    // Team and Partner workspaces are not supported by the current domain model
 
     return groups;
   });
 
   onWorkspaceChange(workspaceId: string): void {
-    this.workspaceStore.selectWorkspace(workspaceId);
+    // Emit event - parent component handles navigation
     this.workspaceChanged.emit(workspaceId);
   }
 

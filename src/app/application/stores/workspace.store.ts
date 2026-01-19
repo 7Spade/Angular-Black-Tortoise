@@ -24,11 +24,14 @@ import {
 } from '@application/tokens/repository.tokens';
 import type { ModuleRepository } from '@domain/modules/repositories/module.repository.interface';
 import type { WorkspaceRepository } from '@domain/workspace/repositories/workspace.repository.interface';
+import type { WorkspaceViewModel } from '@application/view-models/workspace.view-models';
 
 export interface WorkspaceState {
   workspaces: Workspace[];
   modules: WorkspaceModule[];
   activeOwner: WorkspaceOwnerSelection | null;
+  // UI-specific data (temporary mock until repository fully implemented)
+  currentWorkspace: WorkspaceViewModel | null;
   loading: boolean;
   error: string | null;
 }
@@ -37,6 +40,16 @@ const initialState: WorkspaceState = {
   workspaces: [],
   modules: [],
   activeOwner: null,
+  // Mock current workspace for UI development
+  currentWorkspace: {
+    id: 'workspace-1',
+    name: 'My First Workspace',
+    ownerType: 'user',
+    ownerId: 'mock-user-1',
+    status: 'active',
+    moduleIds: ['module-1', 'module-2'],
+    createdAt: new Date().toISOString()
+  },
   loading: false,
   error: null,
 };
@@ -56,6 +69,9 @@ export const WorkspaceStore = signalStore(
     ) => ({
       setActiveOwner(ownerType: WorkspaceOwnerType, ownerId: string): void {
         patchState(store, { activeOwner: { ownerId, ownerType } });
+      },
+      setCurrentWorkspace(workspace: WorkspaceViewModel | null): void {
+        patchState(store, { currentWorkspace: workspace });
       },
       connectOwnerSelection: rxMethod<WorkspaceOwnerSelection>(
         pipe(

@@ -41,7 +41,7 @@ export class IdentitySwitcherComponent {
     if (active.ownerType === 'user') {
       const user = this.identityStore
         .users()
-        .find((u) => u.id.getValue() === active.ownerId);
+        .find((u) => u.id === active.ownerId);
       return user ? 'Personal' : 'User';
     }
 

@@ -41,4 +41,13 @@ export class WorkspaceOwner {
   isOrganizationOwned(): boolean {
     return this.ownerType === 'organization';
   }
+
+  // Public getters for external access (needed by presentation layer)
+  get id(): string {
+    return this.ownerId;
+  }
+
+  get type(): WorkspaceOwnerType {
+    return this.ownerType;
+  }
 }

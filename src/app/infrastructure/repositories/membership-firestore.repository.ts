@@ -32,6 +32,7 @@ export class MembershipFirestoreRepository implements MembershipRepository {
       map((docs) =>
         docs.map((doc) => ({
           id: MembershipId.create(asString(doc['id'])),
+          name: asString(doc['name']),
           organizationId: asString(doc['organizationId']),
           memberIds: asStringArray(doc['memberIds']),
         })),
@@ -50,6 +51,7 @@ export class MembershipFirestoreRepository implements MembershipRepository {
       map((docs) =>
         docs.map((doc) => ({
           id: MembershipId.create(asString(doc['id'])),
+          name: asString(doc['name']),
           organizationId: asString(doc['organizationId']),
           memberIds: asStringArray(doc['memberIds']),
         })),

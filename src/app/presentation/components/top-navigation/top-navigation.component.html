@@ -32,8 +32,8 @@
       </div>
       <div class="user-info">
         <div class="user-name">{{ getUserDisplayName() }}</div>
-        @if (identityStore.users().length > 0) {
-          <div class="user-email">{{ identityStore.users()[0].email.getValue() }}</div>
+        @if (identityStore.currentUser(); as user) {
+          <div class="user-email">{{ user.email }}</div>
         }
       </div>
     </div>

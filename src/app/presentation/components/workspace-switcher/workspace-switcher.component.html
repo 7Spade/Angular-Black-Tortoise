@@ -3,7 +3,7 @@
   <mat-icon matPrefix>workspaces</mat-icon>
 
   <mat-select
-    [value]="workspaceStore.currentWorkspace()?.id.getValue() ?? null"
+    [value]="workspaceStore.currentWorkspace()?.id ?? null"
     (selectionChange)="onWorkspaceChange($event.value)"
     placeholder="Select workspace">
     @for (group of workspaceGroups(); track group.label) {

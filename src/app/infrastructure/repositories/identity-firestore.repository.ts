@@ -8,6 +8,8 @@ import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
 import { IdentityId } from '@domain/identity/value-objects/identity-id.value-object';
+import { Email } from '@domain/identity/value-objects/email.value-object';
+import { DisplayName } from '@domain/identity/value-objects/display-name.value-object';
 import { Bot } from '@domain/identity/entities/bot.entity';
 import { Organization } from '@domain/identity/entities/organization.entity';
 import { User } from '@domain/identity/entities/user.entity';
@@ -24,6 +26,8 @@ export class IdentityFirestoreRepository implements IdentityRepository {
       map((docs) =>
         docs.map((doc) => ({
           id: IdentityId.create(asString(doc['id'])),
+          email: Email.create(asString(doc['email'])).getValue(),
+          displayName: DisplayName.create(asString(doc['displayName'])).getValue(),
           organizationIds: asStringArray(doc['organizationIds']),
           teamIds: asStringArray(doc['teamIds']),
           partnerIds: asStringArray(doc['partnerIds']),
@@ -40,6 +44,8 @@ export class IdentityFirestoreRepository implements IdentityRepository {
       map((docs) =>
         docs.map((doc) => ({
           id: IdentityId.create(asString(doc['id'])),
+          name: DisplayName.create(asString(doc['name'])).getValue(),
+          ownerId: IdentityId.create(asString(doc['ownerId'])),
           memberIds: asStringArray(doc['memberIds']),
           teamIds: asStringArray(doc['teamIds']),
           partnerIds: asStringArray(doc['partnerIds']),

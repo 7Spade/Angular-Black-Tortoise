@@ -3,6 +3,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { IdentitySwitcherComponent } from '../identity-switcher/identity-switcher.component';
 import { WorkspaceSwitcherComponent } from '../workspace-switcher/workspace-switcher.component';
 import { IdentityStore } from '@application/stores/identity.store';
@@ -15,6 +16,7 @@ import { IdentityStore } from '@application/stores/identity.store';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
+    MatDividerModule,
     IdentitySwitcherComponent,
     WorkspaceSwitcherComponent,
   ],
@@ -25,29 +27,31 @@ export class TopNavigationComponent {
   readonly identityStore = inject(IdentityStore);
 
   getUserInitials(): string {
-    const users = this.identityStore.users();
-    if (users.length === 0) {
+    const user = this.identityStore.currentUser();
+    if (!user) {
       return '?';
     }
 
-    const user = users[0];
-    const displayName = user.displayName?.getValue() || user.email.getValue();
+    const displayName = user.displayName || user.email;
     const parts = displayName.split(' ');
 
     if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+      const first = parts[0]?.[0];
+      const second = parts[1]?.[0];
+      if (first && second) {
+        return (first + second).toUpperCase();
+      }
     }
 
     return displayName.slice(0, 2).toUpperCase();
   }
 
   getUserDisplayName(): string {
-    const users = this.identityStore.users();
-    if (users.length === 0) {
+    const user = this.identityStore.currentUser();
+    if (!user) {
       return 'Guest';
     }
 
-    const user = users[0];
-    return user.displayName?.getValue() || user.email.getValue();
+    return user.displayName || user.email;
   }
 }
