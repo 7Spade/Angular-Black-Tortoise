@@ -37,6 +37,7 @@ import {
 import { AuthAngularFireRepository } from '@infrastructure/repositories/auth-angularfire.repository';
 import { IdentityFirestoreRepository } from '@infrastructure/repositories/identity-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
+import { APP_ROUTES } from '@presentation/app.routes';
 import { environment } from '../environments/environment';
 
 /**
@@ -77,8 +78,8 @@ export const appConfig: ApplicationConfig = {
     // Note: This is now a stable API in Angular 20+ (no longer experimental)
     provideZonelessChangeDetection(),
 
-    // Router configuration (routes removed; using empty route set)
-    provideRouter([]),
+    // Router configuration
+    provideRouter(APP_ROUTES),
     provideAnimations(),
 
     // Firebase App Initialization
