@@ -30,6 +30,21 @@ const toAuthUser = (authUser: User): AuthUser => ({
   emailVerified: authUser.emailVerified,
 });
 
+const createUserProfilePayload = (
+  authUser: User,
+  credentials: AuthCredentials,
+) => ({
+  id: authUser.uid,
+  email: authUser.email ?? credentials.email,
+  displayName: authUser.displayName ?? '',
+  photoURL: authUser.photoURL ?? '',
+  createdAt: serverTimestamp(),
+  organizationIds: [],
+  teamIds: [],
+  partnerIds: [],
+  workspaceIds: [],
+});
+
 @Injectable()
 export class AuthAngularFireRepository implements AuthRepository {
   private readonly auth = inject(Auth);
@@ -60,19 +75,7 @@ export class AuthAngularFireRepository implements AuthRepository {
       ),
     ).pipe(
       exhaustMap((result) =>
-        from(
-          setDoc(doc(this.firestore, Collections.users, result.user.uid), {
-            id: result.user.uid,
-            email: result.user.email ?? credentials.email,
-            displayName: result.user.displayName ?? '',
-            photoURL: result.user.photoURL ?? '',
-            createdAt: serverTimestamp(),
-            organizationIds: [],
-            teamIds: [],
-            partnerIds: [],
-            workspaceIds: [],
-          }),
-        ).pipe(map(() => toAuthUser(result.user))),
+        from(this.createUserProfile(result.user, credentials)),
       ),
     );
   }
@@ -101,5 +104,41 @@ export class AuthAngularFireRepository implements AuthRepository {
       exhaustMap(() => from(currentUser.reload())),
       map(() => toAuthUser(currentUser)),
     );
+  }
+
+  private async createUserProfile(
+    authUser: User,
+    credentials: AuthCredentials,
+  ): Promise<AuthUser> {
+    try {
+      await setDoc(
+        doc(this.firestore, Collections.users, authUser.uid),
+        createUserProfilePayload(authUser, credentials),
+      );
+      return toAuthUser(authUser);
+    } catch (error) {
+      const email = authUser.email ?? credentials.email;
+      console.error('User profile save failed after sign-up.', {
+        uid: authUser.uid,
+        email,
+        error,
+      });
+      try {
+        await authUser.delete();
+      } catch (rollbackError) {
+        console.error(
+          'Rollback failed after user profile creation error.',
+          rollbackError,
+        );
+      }
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'User profile creation failed.';
+      console.error('User profile persistence error detail:', message);
+      throw new Error(
+        'Unable to complete registration. Please try again, and contact support if the issue persists.',
+      );
+    }
   }
 }

@@ -365,23 +365,34 @@ export class AuthPageComponent {
     });
 
     effect(() => {
-      this.mode();
+      const currentMode = this.mode();
+      this.authStore.clearError();
       this.resetSent.set(false);
       this.resetRequested.set(false);
-      this.authStore.clearError();
+      switch (currentMode) {
+        case 'login':
+          this.loginForm.reset();
+          break;
+        case 'register':
+          this.registerForm.reset();
+          break;
+        case 'reset':
+          this.resetForm.reset();
+          break;
+      }
     });
 
     effect(() => {
-      if (
-        this.mode() === 'reset' &&
-        this.resetRequested() &&
-        !this.authStore.loading() &&
-        !this.authStore.error()
-      ) {
+      if (this.mode() !== 'reset') {
+        return;
+      }
+      const hasError = this.authStore.error();
+      const isDone = this.resetRequested() && !this.authStore.loading() && !hasError;
+      if (isDone) {
         this.resetSent.set(true);
         this.resetRequested.set(false);
       }
-      if (this.authStore.error()) {
+      if (hasError) {
         this.resetSent.set(false);
         this.resetRequested.set(false);
       }
