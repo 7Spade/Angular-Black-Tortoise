@@ -12,8 +12,9 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, filter, pipe, tap } from 'rxjs';
 import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
-import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
+import type { Module } from '@domain/modules/entities/module.entity';
 import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
 import {
   AppEventBus,
   WorkspaceOwnerSelection,
@@ -27,7 +28,7 @@ import type { WorkspaceRepository } from '@domain/workspace/repositories/workspa
 
 export interface WorkspaceState {
   workspaces: Workspace[];
-  modules: WorkspaceModule[];
+  modules: Module[];
   activeOwner: WorkspaceOwnerSelection | null;
   loading: boolean;
   error: string | null;
@@ -67,12 +68,16 @@ export const WorkspaceStore = signalStore(
               error: null,
             }),
           ),
-          exhaustMap((selection) =>
-            repository.getWorkspacesByOwner(
-              selection.ownerType,
+          exhaustMap((selection) => {
+            const ownerResult = WorkspaceOwner.create(
               selection.ownerId,
-            ),
-          ),
+              selection.ownerType,
+            );
+            if (ownerResult.isFailure()) {
+              throw new Error(ownerResult.getError().message);
+            }
+            return repository.getWorkspacesByOwner(ownerResult.getValue());
+          }),
           tapResponse({
             next: (workspaces) =>
               patchState(store, { workspaces, loading: false }),

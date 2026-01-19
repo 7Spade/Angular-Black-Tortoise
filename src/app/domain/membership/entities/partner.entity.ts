@@ -1,6 +1,6 @@
 import type { MembershipId } from '../value-objects/membership-id.value-object';
 import type { IdentityId } from '../../identity/value-objects/identity-id.value-object';
-import type { Email } from '../../identity/value-objects/email.value-object';
+import type { Email } from '../../shared/value-objects/email.value-object';
 import type { DisplayName } from '../../identity/value-objects/display-name.value-object';
 
 /**

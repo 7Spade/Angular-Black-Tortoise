@@ -37,7 +37,11 @@ export class CreateTeamCommandHandler {
   ): Promise<Result<string, DomainError>> {
     try {
       // Validate organization ID
-      const orgId = IdentityId.fromString(command.organizationId);
+      const orgIdResult = IdentityId.fromString(command.organizationId);
+      if (orgIdResult.isFailure()) {
+        return Result.fail(orgIdResult.getError());
+      }
+      const orgId = orgIdResult.getValue();
 
       // Validate team name
       const nameResult = DisplayName.create(command.name);
@@ -71,20 +75,22 @@ export class CreateTeamCommandHandler {
       }
 
       // Create team entity
-      const teamId = MembershipId.create(crypto.randomUUID());
+      const teamIdResult = MembershipId.create(crypto.randomUUID());
+      if (teamIdResult.isFailure()) {
+        return Result.fail(teamIdResult.getError());
+      }
 
       const team = Team.create({
-        id: teamId,
+        id: teamIdResult.getValue(),
         organizationId: orgId,
         name: nameResult.getValue(),
         memberIds,
-        createdAt: Timestamp.create(new Date()),
       });
 
       // Save team (implementation needed in repository)
       // await this.membershipRepository.saveTeam(team);
 
-      return Result.ok(teamId.getValue());
+      return Result.ok(teamIdResult.getValue().getValue());
     } catch (error) {
       return Result.fail(
         new DomainError(

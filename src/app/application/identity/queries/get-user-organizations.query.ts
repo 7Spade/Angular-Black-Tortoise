@@ -17,16 +17,16 @@ export class GetUserOrganizationsQuery {
     return organizations
       .filter(
         (org) =>
-          org.ownerId === userId || org.memberIds.includes(userId)
+          org.ownerId.getValue() === userId || org.memberIds.includes(userId)
       )
       .map((org) => ({
         id: org.id.getValue(),
         type: org.type,
-        ownerId: org.ownerId,
+        ownerId: org.ownerId.getValue(),
+        name: org.name.getValue(),
         memberIds: [...org.memberIds],
         teamIds: [...org.teamIds],
         partnerIds: [...org.partnerIds],
-        workspaceIds: [...org.workspaceIds],
       }));
   }
 }

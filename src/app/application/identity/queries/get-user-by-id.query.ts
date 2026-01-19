@@ -19,14 +19,13 @@ export class GetUserByIdQuery {
       return null;
     }
     
-    // In DDD, membership data should be retrieved from separate repositories
-    // User entity should not contain foreign key arrays
     return {
       id: user.id.getValue(),
       type: user.type,
       email: user.email.getValue(),
       displayName: user.displayName.getValue(),
       status: user.status.getValue(),
+      createdAt: user.createdAt.getValue().toISOString(),
     };
   }
 }

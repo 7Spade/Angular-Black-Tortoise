@@ -65,7 +65,7 @@ export class CreateWorkspaceCommandHandler {
       }
 
       // Create workspace entity
-      const workspaceIdResult = WorkspaceId.create();
+      const workspaceIdResult = WorkspaceId.create(crypto.randomUUID());
       if (!workspaceIdResult.isOk) {
         return Result.fail(workspaceIdResult.error);
       }

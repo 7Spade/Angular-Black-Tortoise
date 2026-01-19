@@ -38,7 +38,11 @@ export class CreatePartnerCommandHandler {
   ): Promise<Result<string, DomainError>> {
     try {
       // Validate organization ID
-      const orgId = IdentityId.fromString(command.organizationId);
+      const orgIdResult = IdentityId.fromString(command.organizationId);
+      if (orgIdResult.isFailure()) {
+        return Result.fail(orgIdResult.getError());
+      }
+      const orgId = orgIdResult.getValue();
 
       // Validate partner name
       const nameResult = DisplayName.create(command.name);
@@ -66,21 +70,23 @@ export class CreatePartnerCommandHandler {
       }
 
       // Create partner entity
-      const partnerId = MembershipId.create(crypto.randomUUID());
+      const partnerIdResult = MembershipId.create(crypto.randomUUID());
+      if (partnerIdResult.isFailure()) {
+        return Result.fail(partnerIdResult.getError());
+      }
 
       const partner = Partner.create({
-        id: partnerId,
+        id: partnerIdResult.getValue(),
         organizationId: orgId,
         name: nameResult.getValue(),
         contactEmail: emailResult.getValue(),
         memberIds: command.memberIds ?? [],
-        createdAt: Timestamp.create(new Date()),
       });
 
       // Save partner (implementation needed in repository)
       // await this.membershipRepository.savePartner(partner);
 
-      return Result.ok(partnerId.getValue());
+      return Result.ok(partnerIdResult.getValue().getValue());
     } catch (error) {
       return Result.fail(
         new DomainError(

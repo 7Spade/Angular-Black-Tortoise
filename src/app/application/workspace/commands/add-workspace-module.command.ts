@@ -4,6 +4,7 @@ import { WorkspaceAggregate } from '@domain/workspace/aggregates/workspace.aggre
 import { WorkspaceModule } from '@domain/workspace/entities/workspace-module.entity';
 import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 import { ModuleKey } from '@domain/workspace/value-objects/module-key.value-object';
+import { ModuleConfig } from '@domain/workspace/value-objects/module-config.value-object';
 import { Result } from '@domain/shared/types/result.type';
 import { DomainError } from '@domain/shared/errors/domain.error';
 import { NotFoundError } from '@domain/shared/errors/not-found.error';
@@ -69,7 +70,7 @@ export class AddWorkspaceModuleCommandHandler {
         id: moduleId,
         workspaceId: workspaceIdResult.value,
         moduleKey: moduleKeyResult.value,
-        config: command.config ?? {},
+        config: ModuleConfig.create(command.config ?? {}),
       });
 
       // Add module to aggregate (validates quota limits)

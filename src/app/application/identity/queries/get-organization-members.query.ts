@@ -25,7 +25,7 @@ export class GetOrganizationMembersQuery {
       return [];
     }
     
-    const memberIds = [org.ownerId, ...org.memberIds];
+    const memberIds = [org.ownerId.getValue(), ...org.memberIds];
     return users
       .filter((user) => memberIds.includes(user.id.getValue()))
       .map((user) => ({
@@ -34,6 +34,7 @@ export class GetOrganizationMembersQuery {
         email: user.email.getValue(),
         displayName: user.displayName.getValue(),
         status: user.status.getValue(),
+        createdAt: user.createdAt.getValue().toISOString(),
       }));
   }
 }

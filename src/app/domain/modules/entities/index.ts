@@ -1,1 +1,1 @@
-export { WorkspaceModule } from './workspace-module.entity';
+export { Module } from './module.entity';

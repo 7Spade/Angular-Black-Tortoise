@@ -24,8 +24,22 @@ export class Timestamp {
     return new Timestamp(new Date());
   }
 
+  /**
+   * Create Timestamp from milliseconds since epoch.
+   */
+  static fromMilliseconds(ms: number): Result<Timestamp, ValidationError> {
+    return Timestamp.create(ms);
+  }
+
   getValue(): Date {
     return new Date(this.value);
+  }
+
+  /**
+   * Get timestamp as milliseconds since epoch.
+   */
+  toMilliseconds(): number {
+    return this.value.getTime();
   }
 
   equals(other: Timestamp): boolean {

@@ -4,12 +4,12 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signOut,
+  signOut as firebaseSignOut,
   updateProfile,
   user,
 } from '@angular/fire/auth';
 import { Firestore, doc, serverTimestamp, setDoc } from '@angular/fire/firestore';
-import { exhaustMap, from, map, Observable, throwError } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import type { User } from '@angular/fire/auth';
 import type {
   AuthCredentials,
@@ -25,11 +25,19 @@ import { Collections } from '../collections/collection-names';
  * Map Firebase Auth User to the domain AuthUser entity.
  */
 const toAuthUser = (authUser: User): AuthUser => {
-  const id = IdentityId.create(authUser.uid);
-  const email = Email.create(authUser.email ?? '');
+  const idResult = IdentityId.create(authUser.uid);
+  const emailResult = Email.create(authUser.email ?? '');
+  
+  if (idResult.isFailure()) {
+    throw new Error(idResult.getError().message);
+  }
+  if (emailResult.isFailure()) {
+    throw new Error(emailResult.getError().message);
+  }
+  
   return AuthUser.create({
-    id,
-    email,
+    id: idResult.getValue(),
+    email: emailResult.getValue(),
     emailVerified: authUser.emailVerified,
   });
 };
@@ -54,48 +62,45 @@ export class AuthAngularFireRepository implements AuthRepository {
   private readonly auth = inject(Auth);
   private readonly firestore = inject(Firestore);
 
-  authState(): Observable<AuthUser | null> {
-    return user(this.auth).pipe(
-      map((currentUser) => (currentUser ? toAuthUser(currentUser) : null)),
+  async authState(): Promise<AuthUser | null> {
+    const currentUser = await firstValueFrom(
+      user(this.auth).pipe(
+        map((currentUser) => (currentUser ? toAuthUser(currentUser) : null))
+      )
     );
+    return currentUser;
   }
 
-  signIn(credentials: AuthCredentials): Observable<AuthUser> {
-    return from(
-      signInWithEmailAndPassword(
-        this.auth,
-        credentials.email,
-        credentials.password,
-      ),
-    ).pipe(map((result) => toAuthUser(result.user)));
-  }
-
-  signUp(credentials: AuthCredentials): Observable<AuthUser> {
-    return from(
-      createUserWithEmailAndPassword(
-        this.auth,
-        credentials.email,
-        credentials.password,
-      ),
-    ).pipe(
-      exhaustMap((result) =>
-        from(this.createUserProfile(result.user, credentials)),
-      ),
+  async signIn(credentials: AuthCredentials): Promise<AuthUser> {
+    const result = await signInWithEmailAndPassword(
+      this.auth,
+      credentials.email,
+      credentials.password
     );
+    return toAuthUser(result.user);
   }
 
-  signOut(): Observable<void> {
-    return from(signOut(this.auth));
+  async signUp(credentials: AuthCredentials): Promise<AuthUser> {
+    const result = await createUserWithEmailAndPassword(
+      this.auth,
+      credentials.email,
+      credentials.password
+    );
+    return await this.createUserProfile(result.user, credentials);
   }
 
-  sendPasswordReset(email: string): Observable<void> {
-    return from(sendPasswordResetEmail(this.auth, email));
+  async signOut(): Promise<void> {
+    await firebaseSignOut(this.auth);
   }
 
-  updateProfile(update: AuthProfileUpdate): Observable<AuthUser> {
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
+  }
+
+  async updateProfile(update: AuthProfileUpdate): Promise<AuthUser> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) {
-      return throwError(() => new Error('No authenticated user.'));
+      throw new Error('No authenticated user.');
     }
     const profileUpdate: { displayName?: string | null; photoURL?: string | null } = {};
     if (update.displayName !== undefined) {
@@ -104,10 +109,9 @@ export class AuthAngularFireRepository implements AuthRepository {
     if (update.photoUrl !== undefined) {
       profileUpdate.photoURL = update.photoUrl;
     }
-    return from(updateProfile(currentUser, profileUpdate)).pipe(
-      exhaustMap(() => from(currentUser.reload())),
-      map(() => toAuthUser(currentUser)),
-    );
+    await updateProfile(currentUser, profileUpdate);
+    await currentUser.reload();
+    return toAuthUser(currentUser);
   }
 
   private async createUserProfile(
