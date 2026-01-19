@@ -4,3 +4,5 @@ export { TeamRole } from './team-role.value-object';
 export { PartnerName } from './partner-name.value-object';
 export { PartnerRole } from './partner-role.value-object';
 export { PartnerAccessLevel } from './partner-access-level.value-object';
+export { Role } from './role.value-object';
+export { AccountType } from './account-type.value-object';
