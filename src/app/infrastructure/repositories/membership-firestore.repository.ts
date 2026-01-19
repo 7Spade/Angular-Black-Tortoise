@@ -16,7 +16,7 @@ import { Partner } from '@domain/membership/entities/partner.entity';
 import { Team } from '@domain/membership/entities/team.entity';
 import { MembershipId } from '@domain/membership/value-objects/membership-id.value-object';
 import { Collections } from '../collections/collection-names';
-import { asString, asStringArray } from '../utils/firestore-mappers';
+import { asString, asStringArray } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class MembershipFirestoreRepository implements MembershipRepository {

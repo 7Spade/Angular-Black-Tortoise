@@ -13,7 +13,7 @@ import { WorkspaceModule } from '@domain/modules/entities/workspace-module.entit
 import { ModuleId } from '@domain/modules/value-objects/module-id.value-object';
 import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 import { Collections } from '../collections/collection-names';
-import { asString } from '../utils/firestore-mappers';
+import { asString } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class ModuleFirestoreRepository implements ModuleRepository {

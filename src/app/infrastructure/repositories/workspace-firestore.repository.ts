@@ -14,7 +14,7 @@ import { Workspace } from '@domain/workspace/entities/workspace.entity';
 import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
 import { Collections } from '../collections/collection-names';
-import { asString, asStringArray } from '../utils/firestore-mappers';
+import { asString, asStringArray } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class WorkspaceFirestoreRepository implements WorkspaceRepository {

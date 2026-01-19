@@ -12,7 +12,7 @@ import { Bot } from '@domain/identity/entities/bot.entity';
 import { Organization } from '@domain/identity/entities/organization.entity';
 import { User } from '@domain/identity/entities/user.entity';
 import { Collections } from '../collections/collection-names';
-import { asString, asStringArray } from '../utils/firestore-mappers';
+import { asString, asStringArray } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class IdentityFirestoreRepository implements IdentityRepository {
