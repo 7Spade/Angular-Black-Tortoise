@@ -1,0 +1,97 @@
+@if (hasWorkspaces()) {
+  <mat-form-field appearance="outline" class="workspace-switcher">
+    <mat-label>Workspace</mat-label>
+    <mat-select
+      [(value)]="selectedWorkspaceId"
+      (selectionChange)="onWorkspaceChange($event.value)"
+      [disabled]="loading()"
+    >
+      <!-- Owned Workspaces -->
+      @if (getGroupedWorkspaces().owned.length > 0) {
+        <mat-optgroup label="Owned">
+          @for (workspace of getGroupedWorkspaces().owned; track workspace.id.value) {
+            <mat-option [value]="workspace.id.value">
+              <div class="workspace-option">
+                <span class="workspace-name">{{ workspace.name }}</span>
+                <mat-chip
+                  [color]="getStatusColor(workspace.status)"
+                  class="status-badge"
+                >
+                  {{ getStatusText(workspace.status) }}
+                </mat-chip>
+              </div>
+            </mat-option>
+          }
+        </mat-optgroup>
+      }
+
+      <!-- Member Workspaces -->
+      @if (getGroupedWorkspaces().member.length > 0) {
+        <mat-optgroup label="Member">
+          @for (workspace of getGroupedWorkspaces().member; track workspace.id.value) {
+            <mat-option [value]="workspace.id.value">
+              <div class="workspace-option">
+                <span class="workspace-name">{{ workspace.name }}</span>
+                <mat-chip
+                  [color]="getStatusColor(workspace.status)"
+                  class="status-badge"
+                >
+                  {{ getStatusText(workspace.status) }}
+                </mat-chip>
+              </div>
+            </mat-option>
+          }
+        </mat-optgroup>
+      }
+
+      <!-- Team Workspaces -->
+      @if (getGroupedWorkspaces().team.length > 0) {
+        <mat-optgroup label="Team">
+          @for (workspace of getGroupedWorkspaces().team; track workspace.id.value) {
+            <mat-option [value]="workspace.id.value">
+              <div class="workspace-option">
+                <span class="workspace-name">{{ workspace.name }}</span>
+                <mat-chip
+                  [color]="getStatusColor(workspace.status)"
+                  class="status-badge"
+                >
+                  {{ getStatusText(workspace.status) }}
+                </mat-chip>
+              </div>
+            </mat-option>
+          }
+        </mat-optgroup>
+      }
+
+      <!-- Partner Workspaces -->
+      @if (getGroupedWorkspaces().partner.length > 0) {
+        <mat-optgroup label="Partner">
+          @for (workspace of getGroupedWorkspaces().partner; track workspace.id.value) {
+            <mat-option [value]="workspace.id.value">
+              <div class="workspace-option">
+                <span class="workspace-name">{{ workspace.name }}</span>
+                <mat-chip
+                  [color]="getStatusColor(workspace.status)"
+                  class="status-badge"
+                >
+                  {{ getStatusText(workspace.status) }}
+                </mat-chip>
+              </div>
+            </mat-option>
+          }
+        </mat-optgroup>
+      }
+    </mat-select>
+
+    @if (loading()) {
+      <mat-icon matSuffix>hourglass_empty</mat-icon>
+    } @else {
+      <mat-icon matSuffix>folder_open</mat-icon>
+    }
+  </mat-form-field>
+} @else {
+  <div class="no-workspaces">
+    <mat-icon>info</mat-icon>
+    <span>No workspaces available</span>
+  </div>
+}

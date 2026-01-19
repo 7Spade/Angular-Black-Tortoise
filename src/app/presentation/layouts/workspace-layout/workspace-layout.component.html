@@ -1,0 +1,65 @@
+<div class="workspace-layout">
+  <!-- Top Navigation -->
+  <app-top-navigation />
+
+  <!-- Main Content Area with Sidebar -->
+  <mat-sidenav-container class="workspace-container">
+    <!-- Sidebar -->
+    <mat-sidenav
+      #sidenav
+      [opened]="sidenavOpened"
+      [mode]="'side'"
+      class="workspace-sidenav"
+    >
+      <!-- Workspace Info -->
+      @if (currentWorkspace(); as workspace) {
+        <div class="workspace-info">
+          <h2 class="workspace-name">{{ workspace.name }}</h2>
+          <p class="workspace-status">{{ workspace.status }}</p>
+        </div>
+      }
+
+      <!-- Module Navigation -->
+      <mat-nav-list class="module-nav">
+        @if (getMenuItems().length > 0) {
+          @for (item of getMenuItems(); track item.route) {
+            <a
+              mat-list-item
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              class="nav-item"
+            >
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.label }}</span>
+            </a>
+          }
+        } @else {
+          <div class="no-modules">
+            <mat-icon>info</mat-icon>
+            <p>No modules configured</p>
+          </div>
+        }
+      </mat-nav-list>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button
+          mat-button
+          (click)="toggleSidenav()"
+          class="collapse-button"
+        >
+          <mat-icon>chevron_left</mat-icon>
+          <span>Collapse</span>
+        </button>
+      </div>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="workspace-content">
+      <!-- Module Router Outlet -->
+      <div class="content-container">
+        <router-outlet />
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
