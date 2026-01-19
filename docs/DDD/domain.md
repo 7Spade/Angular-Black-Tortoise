@@ -4,6 +4,8 @@
 
 根據您的多工作區團隊協作系統架構,以下是 `src/app/domain` 的完整檔案樹:
 
+> 現況原始碼摘錄請參考 [domain-source-extract.md](./domain-source-extract.md)。
+
 ```
 src/app/domain/
 │
