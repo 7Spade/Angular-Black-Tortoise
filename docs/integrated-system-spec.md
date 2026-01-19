@@ -30,19 +30,23 @@
 │                   (全局外殼)                             │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  Account Layer (身份層)                                  │
+│  Identity Layer (身份層)                                 │
 │  ├─ User (個人用戶)                                      │
 │  ├─ Organization (組織)                                  │
-│  ├─ Team (團隊 - 組織內部單位)                           │
-│  ├─ Partner (夥伴 - 組織外部單位)                        │
 │  └─ Bot (服務帳號)                                       │
+│                                                         │
+│  ↓                                                      │
+│                                                         │
+│  Membership Layer (成員關係)                             │
+│  ├─ Team (組織內部分組)                                  │
+│  └─ Partner (外部協作分組)                               │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
 │  Workspace Layer (工作區層)                              │
 │  ├─ ownerId: User | Organization                        │
 │  ├─ ownerType: 'user' | 'organization'                  │
-│  └─ workspaceType: 'project' | 'department' | ...       │
+│  └─ moduleIds: ModuleId[]                               │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
@@ -50,11 +54,8 @@
 │  ├─ Overview (總覽)                                      │
 │  ├─ Documents (文件管理)                                 │
 │  ├─ Tasks (任務管理)                                     │
-│  ├─ Members (成員管理)                                   │
-│  ├─ Permissions (權限設定)                               │
-│  ├─ Audit (稽核記錄)                                     │
 │  ├─ Settings (工作區設定)                                │
-│  └─ Journal (活動日誌)                                   │
+│  └─ Calendar (行事曆)                                    │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
@@ -67,8 +68,8 @@
 ### 1.2 關鍵設計原則
 
 #### 身份獨立性
-- **User / Organization / Bot / Team / Partner** 都是獨立的身份實體
-- 每個身份都有唯一 ID 和專屬配置
+- **User / Organization / Bot** 是可登入的身份實體
+- **Team / Partner** 屬於 Membership 層的成員分組,不是可登入身份
 - 身份之間不存在嵌套關係,僅存在成員關係
 
 #### 擁有權明確性
@@ -77,7 +78,7 @@
 - 使用 `ownerId` + `ownerType` 的聯合型別設計
 
 #### 成員關係管理
-- Organization / Team / Partner 透過 `memberIds: string[]` 關聯成員
+- Organization / Team / Partner 透過 `memberIds` 關聯成員
 - 不在實體中嵌套完整 User 物件,僅儲存 ID 引用
 - 成員資料透過 Repository 查詢取得
 
@@ -92,14 +93,16 @@
 
 ### 2.1 身份類型定義
 
-**可登入和切換的帳號類型 (Account Types):**
+**可登入和切換的帳號類型 (Identity Types):**
 
 ```typescript
-enum AccountType {
-  User = 'user',                    // 個人用戶帳號
-  Organization = 'organization',    // 組織帳號
-  Bot = 'bot'                       // 服務帳號 (API用)
-}
+type IdentityType = 'user' | 'organization' | 'bot';
+```
+
+**成員關係類型 (Membership Types):**
+
+```typescript
+type MembershipType = 'team' | 'partner';
 ```
 
 **重要說明:**
@@ -121,12 +124,11 @@ enum AccountType {
 **屬性**:
 ```typescript
 interface User {
-  id: string;                    // 唯一識別碼
-  email: string;                 // 電子郵件
-  displayName: string;           // 顯示名稱
-  photoURL: string;              // 頭像 URL
-  createdAt: Timestamp;          // 創建時間
+  id: IdentityId;                // 唯一識別碼 (Value Object)
   organizationIds: string[];     // 所屬組織 ID 列表
+  teamIds: string[];             // 所屬團隊 ID 列表
+  partnerIds: string[];          // 所屬夥伴 ID 列表
+  workspaceIds: string[];        // 可存取的工作區 ID
 }
 ```
 
@@ -148,23 +150,11 @@ interface User {
 **屬性**:
 ```typescript
 interface Organization {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 組織名稱
-  logoURL: string;                 // 組織 Logo
-  domain: string;                  // 組織域名 (如 company.com)
-  
-  // 組織成員 (User.id 列表)
+  id: IdentityId;                  // 唯一識別碼 (Value Object)
   memberIds: string[];             // 組織的正式成員
-  
-  // 內部團隊
   teamIds: string[];               // Team.id 列表
-  
-  // 外部夥伴
   partnerIds: string[];            // Partner.id 列表
-  
-  settings: OrganizationSettings;  // 組織設定
-  createdAt: Timestamp;            // 創建時間
-  ownerId: string;                 // 組織擁有者 User.id
+  workspaceIds: string[];          // 可存取的工作區 ID
 }
 ```
 
@@ -198,16 +188,9 @@ interface Organization {
 **屬性**:
 ```typescript
 interface Team {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 團隊名稱
+  id: MembershipId;                // 唯一識別碼 (Value Object)
   organizationId: string;          // 所屬組織 ID
-  
-  // 成員列表 (必須是 Organization.memberIds 的子集合)
   memberIds: string[];             // User.id[]
-  
-  leaderId: string;                // 團隊負責人 User.id (也必須在 memberIds 中)
-  description: string;             // 團隊描述
-  createdAt: Timestamp;            // 創建時間
 }
 ```
 
@@ -253,20 +236,9 @@ interface Team {
 **屬性**:
 ```typescript
 interface Partner {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 夥伴名稱 (公司名或個人名)
+  id: MembershipId;                // 唯一識別碼 (Value Object)
   organizationId: string;          // 關聯的 Organization ID
-  
-  // 外部成員列表 (User.id[], 不在 Organization.memberIds 中)
-  memberIds: string[];
-  
-  contactEmail: string;            // 主要聯絡信箱
-  contractInfo: PartnerContract;   // 合約資訊 (可選)
-  
-  // 存取等級
-  accessLevel: 'limited' | 'standard' | 'full';
-  
-  createdAt: Timestamp;            // 建立時間
+  memberIds: string[];             // 外部成員列表
 }
 ```
 
@@ -322,12 +294,7 @@ interface Partner {
 - 無法登入 UI 介面
 
 **屬性**:
-- `id`: string - 唯一識別碼
-- `name`: string - 服務名稱
-- `apiKey`: string - API 金鑰
-- `permissions`: string[] - 權限列表
-- `ownerId`: string - 擁有者 ID (User 或 Organization)
-- `createdAt`: Timestamp - 創建時間
+- `id`: IdentityId - 唯一識別碼 (Value Object)
 
 **使用場景**:
 - CI/CD 整合
@@ -348,43 +315,14 @@ interface Partner {
 **核心屬性**:
 ```typescript
 interface Workspace {
-  id: string;                              // 唯一識別碼
-  name: string;                            // 工作區名稱
-  description: string;                     // 描述
-  
-  // 擁有者資訊 (聯合型別設計)
-  ownerId: string;                         // User.id 或 Organization.id
-  ownerType: 'user' | 'organization';      // 擁有者類型
-  
-  // 工作區類型
-  workspaceType: WorkspaceType;            // 專案/部門/客戶/活動等
-  
-  // 模組配置
-  enabledModules: ModuleType[];            // 啟用的模組列表
-  
-  // 元資料
-  icon: string;                            // 工作區圖標
-  color: string;                           // 主題顏色
-  createdAt: Timestamp;                    // 創建時間
-  updatedAt: Timestamp;                    // 更新時間
-  archivedAt?: Timestamp;                  // 封存時間
-  
-  // 成員存取控制 (透過 Repository 查詢)
-  // 不直接儲存 memberIds,而是透過 ACL 或 Permission 模型管理
+  id: WorkspaceId;                         // 唯一識別碼 (Value Object)
+  owner: WorkspaceOwner;                   // 擁有者 Value Object
+  moduleIds: string[];                     // 模組 ID 列表
 }
 ```
 
 **工作區類型**:
-```typescript
-enum WorkspaceType {
-  Project = 'project',           // 專案工作區
-  Department = 'department',     // 部門工作區
-  Client = 'client',             // 客戶工作區
-  Campaign = 'campaign',         // 活動/行銷工作區
-  Product = 'product',           // 產品工作區
-  Internal = 'internal'          // 內部工作區
-}
-```
+- 目前 Domain 模型未定義 WorkspaceType，若需要型別，請在 domain/workspace/enums 補齊後再擴展。
 
 **關鍵規則**:
 1. **擁有者限制**: 只能是 User 或 Organization
@@ -399,25 +337,22 @@ enum WorkspaceType {
 - 每個模組提供特定業務功能
 - 可獨立啟用/停用
 
-**標準模組列表**:
+**標準模組列表** (對應 `ModuleType`):
 
 | 模組 | 識別碼 | 描述 | 預設啟用 |
 |------|--------|------|----------|
 | Overview | `overview` | 總覽儀表板 | ✓ |
 | Documents | `documents` | 文件與資料夾管理 | ✓ |
 | Tasks | `tasks` | 任務與待辦事項 | ✓ |
-| Members | `members` | 成員與團隊管理 | ✓ |
-| Permissions | `permissions` | 權限與角色設定 | - |
-| Audit | `audit` | 稽核日誌與合規 | - |
+| Calendar | `calendar` | 行事曆 | ✓ |
 | Settings | `settings` | 工作區設定 | ✓ |
-| Journal | `journal` | 活動時間軸 | ✓ |
 
 **模組權限**:
 ```typescript
 interface ModulePermission {
   moduleId: string;
   accountId: string;              // User/Team/Partner ID
-  accountType: AccountType;
+  accountType: 'user' | 'organization' | 'team' | 'partner';
   role: 'viewer' | 'editor' | 'admin';
   grantedAt: Timestamp;
 }
@@ -695,26 +630,15 @@ interface ModulePermission {
 interface PartnerAccess {
   partnerId: string;
   workspaceId: string;
-  
-  // 存取等級
-  accessLevel: 'limited' | 'standard' | 'full';
-  
-  // 允許的模組
   allowedModules: ModuleType[];
-  
-  // 操作限制
   restrictions: {
-    canExport: boolean;        // 是否可匯出資料
-    canInvite: boolean;        // 是否可邀請他人
-    canDelete: boolean;        // 是否可刪除內容
-    canComment: boolean;       // 是否可留言
-    canEdit: boolean;          // 是否可編輯
+    canExport: boolean;
+    canInvite: boolean;
+    canDelete: boolean;
+    canComment: boolean;
+    canEdit: boolean;
   };
-  
-  // 存取期限 (可選)
   expiresAt?: Timestamp;
-  
-  // 授權時間
   grantedAt: Timestamp;
   grantedBy: string;           // User.id
 }
@@ -1365,7 +1289,7 @@ Client · Partner Access (受限)
 function canAccessWorkspace(
   userId: string,
   workspaceId: string,
-  accountType: AccountType
+  accountType: 'user' | 'organization' | 'team' | 'partner'
 ): boolean {
   // 1. 檢查是否為 Workspace Owner
   if (isWorkspaceOwner(userId, workspaceId)) return true;
@@ -1609,8 +1533,6 @@ Alice 在 Acme Corporation 中的關係:
                     │    User     │ ← 可登入的帳號
                     │             │
                     │ - id        │
-                    │ - email     │
-                    │ - name      │
                     └──────┬──────┘
                            │
                  ┌─────────┼─────────┐
@@ -1622,7 +1544,6 @@ Alice 在 Acme Corporation 中的關係:
           │Organization │ │         │ ← 可登入的帳號
           │             │ │         │
           │ - id        │ │         │
-          │ - name      │ │         │
           │ - ownerId   ├─┘         │
           │ - memberIds │←──────────┤
           └──────┬──────┘           │
@@ -1636,7 +1557,6 @@ Alice 在 Acme Corporation 中的關係:
   │     Team     │ │   Partner    ││ ← 不是帳號,是成員分組
   │              │ │              ││
   │ - id         │ │ - id         ││
-  │ - name       │ │ - name       ││
   │ - orgId      │ │ - orgId      ││
   │ - memberIds  │ │ - memberIds  ││ ← 外部 User,不在 Org.memberIds
   │   (Org成員)  │ │   (外部User)  ││
@@ -1651,7 +1571,6 @@ Alice 在 Acme Corporation 中的關係:
       │     Workspace         │   │
       │                       │   │
       │ - id                  │   │
-      │ - name                │   │
       │ - ownerId             │←──┘
       │   (User.id 或         │   可以是 User 或
       │    Organization.id)   │   Organization
@@ -1709,36 +1628,29 @@ Alice 在 Acme Corporation 中的關係:
 
 ```
 /users/{userId}
-  - email, displayName, photoURL, createdAt
   - organizationIds, teamIds, partnerIds
 
 /organizations/{orgId}
-  - name, logoURL, domain
   - ownerId, memberIds, teamIds, partnerIds
-  - settings, createdAt
 
 /teams/{teamId}
-  - name, organizationId
-  - memberIds, leaderId
-  - description, createdAt
+  - organizationId
+  - memberIds
 
 /partners/{partnerId}
-  - name, organizationId
+  - organizationId
   - memberIds, contactEmail
-  - accessLevel, contractInfo, createdAt
 
 /workspaces/{workspaceId}
-  - name, description
-  - ownerId, ownerType, workspaceType
-  - enabledModules, icon, color
-  - createdAt, updatedAt, archivedAt
+  - ownerId, ownerType
+  - moduleIds
 
 /workspaces/{workspaceId}/permissions/{permissionId}
   - accountId, accountType, role
   - grantedAt, grantedBy
 
 /workspaces/{workspaceId}/modules/{moduleId}
-  - moduleType, config, enabled
+  - moduleKey
   - /entities/{entityId} (sub-collection for module entities)
 ```
 
@@ -1787,7 +1699,6 @@ async function getUserWorkspaces(userId: string): Promise<Workspace[]> {
 async function getOrganizationTeams(orgId: string): Promise<Team[]> {
   return await db.collection('teams')
     .where('organizationId', '==', orgId)
-    .orderBy('name')
     .get();
 }
 ```
