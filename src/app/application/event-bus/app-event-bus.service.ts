@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { filter, map, Subject } from 'rxjs';
 import type { Observable } from 'rxjs';
 import type { WorkspaceOwnerType } from '@domain/identity/types/identity.types';
@@ -16,7 +16,7 @@ export interface WorkspaceOwnerSelectedEvent {
 export type AppEvent = WorkspaceOwnerSelectedEvent;
 
 @Injectable({ providedIn: 'root' })
-export class AppEventBus {
+export class AppEventBus implements OnDestroy {
   private readonly events$ = new Subject<AppEvent>();
 
   emit(event: AppEvent): void {
@@ -31,5 +31,9 @@ export class AppEventBus {
       ),
       map((event) => event.payload),
     );
+  }
+
+  ngOnDestroy(): void {
+    this.events$.complete();
   }
 }

@@ -10,7 +10,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
-import { exhaustMap, pipe, tap } from 'rxjs';
+import { exhaustMap, filter, pipe, tap } from 'rxjs';
 import type { WorkspaceOwnerType } from '@domain/identity/types/identity.types';
 import type { WorkspaceModule } from '@domain/workspace/models/workspace-module.model';
 import type { Workspace } from '@domain/workspace/models/workspace.model';
@@ -54,6 +54,7 @@ export const WorkspaceStore = signalStore(
       },
       connectOwnerSelection: rxMethod<WorkspaceOwnerSelection>(
         pipe(
+          filter((selection) => selection.ownerId.length > 0),
           tap((selection) =>
             patchState(store, {
               activeOwner: selection,
