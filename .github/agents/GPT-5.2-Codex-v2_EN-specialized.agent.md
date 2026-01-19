@@ -25,7 +25,6 @@ handoffs:
     agent: agent
     prompt: "驗證代碼是否符合規範,檢查反模式，標明問題與優先修正順序"
     send: true
-applyTo: '**/*.ts'
 ---
 
 # Angular 20+ Pure Reactive Agent Rules
