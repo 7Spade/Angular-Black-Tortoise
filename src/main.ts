@@ -1,73 +1,82 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { Component, inject } from '@angular/core';
-import { QuizStore } from './quiz.store';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getAnalytics, provideAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, provideAppCheck } from '@angular/fire/app-check';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
-import { getDatabase, provideDatabase } from '@angular/fire/database';
-import { getDataConnect, provideDataConnect } from '@angular/fire/data-connect';
-import { getFunctions, provideFunctions } from '@angular/fire/functions';
-import { getMessaging, provideMessaging } from '@angular/fire/messaging';
-import { getPerformance, providePerformance } from '@angular/fire/performance';
-import { getStorage, provideStorage } from '@angular/fire/storage';
-import { getRemoteConfig, provideRemoteConfig } from '@angular/fire/remote-config';
-import { getVertexAI, provideVertexAI } from '@angular/fire/vertexai';
+import { AppComponent } from '@presentation/app.component';
+import { appConfig } from './app/app.config';
 
-@Component({
-  selector: 'app-root',
-  template: `
-    <h1>NgRx Signal Store Seed</h1>
-    <p>Use this as a template to file any issues with the NgRx Signal Store.</p>
-    <h2>{{ quizStore.title() }}</h2>
-    <button (click)="quizStore.restart()">Restart</button>
-
-    <p><b>Unanswered:</b> {{ quizStore.score.unanswered() }}</p>
-    <p><b>Correct:</b> {{ quizStore.score.correct() }}</p>
-    <p><b>Incorrect:</b> {{ quizStore.score.incorrect() }}</p>
-
-    <hr />
-
-    @for (question of quizStore.questions(); track question) {
-      <div>
-        <h3>{{ question.question }}</h3>
-        <div>
-          @for (choice of question.choices; track choice) {
-            <button (click)="quizStore.answer(question.id, choice.id)">
-              {{ choice.text }}
-            </button>
-          }
-        </div>
-
-        @if (question.status !== 'unanswered') {
-          <div>
-            @switch (question.status) {
-              @case ('correct') {
-                <p>Right Answer</p>
-              }
-              @case ('incorrect') {
-                <p>Wrong Answer</p>
-              }
-            }
-
-            <i>{{ question.explanation }}</i>
-          </div>
-        }
+/**
+ * Zone-less Bootstrap Configuration
+ * 
+ * This application uses Angular's zone-less change detection mode (stable in Angular 20+).
+ * 
+ * What this means:
+ * - Zone.js is NOT included in the bundle (saves ~40KB)
+ * - Change detection is signal-based, not zone-based
+ * - Better performance through explicit reactivity
+ * - No automatic change detection after async operations
+ * 
+ * How it works:
+ * 1. provideZonelessChangeDetection() in appConfig enables zone-less mode (stable API)
+ * 2. All state is managed through @ngrx/signals (AuthStore, ContextStore, etc.)
+ * 3. Signal updates automatically trigger change detection
+ * 4. No Zone.js means no NG0908 error
+ * 
+ * Bootstrap sequence:
+ * 1. bootstrapApplication() starts with zone-less providers
+ * 2. AuthStore.withHooks.onInit wires authState$ to signals
+ * 3. Firebase Auth state is loaded reactively
+ * 4. AuthStore.setUser() updates signals
+ * 5. Signal updates trigger change detection
+ * 6. ContextStore reacts to auth changes via withHooks.onInit
+ * 7. App renders with fully initialized reactive state
+ * 
+ * Architecture compliance:
+ * - Account (Firebase Auth) → Identity verification
+ * - Workspace (ContextStore) → Logical boundary
+ * - Module (Feature stores) → Functional units
+ * - Entity (Signal state) → Data models
+ * 
+ * All reactive patterns are zone-less compatible:
+ * - rxMethod() in stores handles async operations
+ * - patchState() updates signals
+ * - computed() derives state
+ * - withHooks.onInit() initializes reactive subscriptions
+ */
+bootstrapApplication(AppComponent, appConfig)
+  .then(() => {
+    console.log('[Bootstrap] Zone-less application started successfully (Angular 20+)');
+    console.log('[Bootstrap] Change detection: Signal-based (Zone.js not loaded)');
+  })
+  .catch((err) => {
+    console.error('[Bootstrap] Application failed to start:', err);
+    // Display error message to user
+    document.body.innerHTML = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #dc2626;
+        background-color: #fef2f2;
+        padding: 20px;
+      ">
+        <h1 style="font-size: 24px; margin-bottom: 12px;">Application Failed to Start</h1>
+        <p style="margin-bottom: 8px;">Please try refreshing the page.</p>
+        <p style="font-size: 14px; color: #991b1b; max-width: 600px; text-align: center;">
+          If this problem persists, please contact support.
+        </p>
+        <details style="margin-top: 20px; max-width: 800px;">
+          <summary style="cursor: pointer; color: #991b1b;">Technical Details</summary>
+          <pre style="
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #fff;
+            border: 1px solid #fecaca;
+            border-radius: 4px;
+            overflow: auto;
+            font-size: 12px;
+          ">${err.message || err}</pre>
+        </details>
       </div>
-    }
-  `,
-  providers: [QuizStore],
-})
-export class App {
-  readonly quizStore = inject(QuizStore);
-}
-
-bootstrapApplication(App, {
-  providers: [provideFirebaseApp(() => initializeApp({ projectId: "elite-chiller-455712-c4", appId: "1:7807661688:web:2864a76608f64ac61d1f8d", databaseURL: "https://elite-chiller-455712-c4-default-rtdb.asia-southeast1.firebasedatabase.app", storageBucket: "elite-chiller-455712-c4.firebasestorage.app", apiKey: "AIzaSyCJ-eayGjJwBKsNIh3oEAG2GjbfTrvAMEI", authDomain: "elite-chiller-455712-c4.firebaseapp.com", messagingSenderId: "7807661688", measurementId: "G-46E86BNYM7", 
-  })), provideAuth(() => getAuth()), provideAnalytics(() => getAnalytics()), ScreenTrackingService, UserTrackingService, provideAppCheck(() => {
-  // TODO get a reCAPTCHA Enterprise here https://console.cloud.google.com/security/recaptcha?project=_
-  const provider = new ReCaptchaEnterpriseProvider('6LeEPkksAAAAACnwP_vo-8h5KOWZCSvIeM0C2_xB');
-  return initializeAppCheck(undefined, { provider, isTokenAutoRefreshEnabled: true });
-}), provideFirestore(() => getFirestore()), provideDatabase(() => getDatabase()), provideDataConnect(() => getDataConnect({connector: "example",location: "northamerica-northeast1",service: "signal-store-starter"})), provideFunctions(() => getFunctions()), provideMessaging(() => getMessaging()), providePerformance(() => getPerformance()), provideStorage(() => getStorage()), provideRemoteConfig(() => getRemoteConfig()), provideVertexAI(() => getVertexAI())]
-});
+    `;
+  });
