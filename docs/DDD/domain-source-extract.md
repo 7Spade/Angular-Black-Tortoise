@@ -2,7 +2,7 @@
 
 > **術語說明**: 請參考 [專業術語對照表 (GLOSSARY.md)](./GLOSSARY.md) 了解本文件使用的標準術語。
 
-此文件整理 `src/app/domain` 目前的實際原始碼內容，供查閱與比對。
+此文件整理 `src/app/domain` 目前的實際原始碼內容，供查閱與比對。現況屬於精簡型別定義，尚未完全符合 `docs/DDD/domain.md` 內的目標 DDD 架構示意。
 
 ## Account
 
@@ -146,4 +146,4 @@ export interface Workspace {
 
 ## Value Objects
 
-目前 `src/app/domain` 內尚未建立 `value-objects` 目錄或值物件檔案；若後續新增，請在此補上對應的原始碼摘錄。
+目前 `src/app/domain` 內尚未建立 `value-objects` 目錄或值物件檔案；`docs/DDD/domain.md` 內所列的 value-objects 屬於目標架構清單。若後續新增，請在此補上對應的原始碼摘錄。

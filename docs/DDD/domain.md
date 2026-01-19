@@ -4,7 +4,7 @@
 
 根據您的多工作區團隊協作系統架構,以下是 `src/app/domain` 的完整檔案樹:
 
-> 現況原始碼摘錄請參考 [domain-source-extract.md](./domain-source-extract.md)。
+> 此檔案樹為目標 DDD 架構示意；實際落地內容請以 [domain-source-extract.md](./domain-source-extract.md) 為準（包含目前尚未實作的 value-objects 說明）。
 
 ```
 src/app/domain/
