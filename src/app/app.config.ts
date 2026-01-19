@@ -29,6 +29,9 @@ import { getStorage, provideStorage } from '@angular/fire/storage';
 import { getVertexAI, provideVertexAI } from '@angular/fire/vertexai';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
+import { IDENTITY_REPOSITORY, WORKSPACE_REPOSITORY } from '@application/tokens/repository.tokens';
+import { IdentityFirestoreRepository } from '@infrastructure/repositories/identity-firestore.repository';
+import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { environment } from '../environments/environment';
 
 /**
@@ -114,6 +117,8 @@ export const appConfig: ApplicationConfig = {
     provideStorage(() => getStorage()),
     provideRemoteConfig(() => getRemoteConfig()),
     provideVertexAI(() => getVertexAI()),
+    { provide: IDENTITY_REPOSITORY, useClass: IdentityFirestoreRepository },
+    { provide: WORKSPACE_REPOSITORY, useClass: WorkspaceFirestoreRepository },
 
     /**
      * Bootstrapping is now 100% reactive:

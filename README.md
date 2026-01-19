@@ -37,6 +37,12 @@ Module (Features)
 Entity (State Objects)
 ```
 
+Identity modeling follows strict ownership and membership rules:
+- **Identity types**: User, Organization, Bot, Team, Partner (all independent identities)
+- **Membership**: Organization/Team/Partner use `memberIds` (no nested user objects)
+- **Workspace ownership**: `ownerId` + `ownerType` (`user` | `organization`) only
+- **Workspace data**: no member lists; modules are tracked by `moduleIds`
+
 ### Zone-less Architecture
 
 The application uses Angular's stable zone-less change detection mode:
