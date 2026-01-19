@@ -8,11 +8,12 @@ import {
 } from '@angular/fire/firestore';
 import { map } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
-import type { BotAccount } from '@domain/identity/models/bot-account.model';
-import type { OrganizationAccount } from '@domain/identity/models/organization-account.model';
-import type { Partner } from '@domain/identity/models/partner.model';
-import type { Team } from '@domain/identity/models/team.model';
-import type { UserAccount } from '@domain/identity/models/user-account.model';
+import type {
+  BotAccount,
+  OrganizationAccount,
+  UserAccount,
+} from '@domain/account/entities/identity.entity';
+import type { Partner, Team } from '@domain/membership/entities/membership.entity';
 import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';
 import { Collections } from '../collections/collection-names';
 import { asString, asStringArray } from '../utils/firestore-mappers';

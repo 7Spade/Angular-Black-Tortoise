@@ -9,12 +9,13 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, pipe, tap } from 'rxjs';
-import type { BotAccount } from '@domain/identity/models/bot-account.model';
-import type { OrganizationAccount } from '@domain/identity/models/organization-account.model';
-import type { Partner } from '@domain/identity/models/partner.model';
-import type { Team } from '@domain/identity/models/team.model';
-import type { UserAccount } from '@domain/identity/models/user-account.model';
-import type { WorkspaceOwnerType } from '@domain/identity/types/identity.types';
+import type {
+  BotAccount,
+  OrganizationAccount,
+  UserAccount,
+  WorkspaceOwnerType,
+} from '@domain/account/entities/identity.entity';
+import type { Partner, Team } from '@domain/membership/entities/membership.entity';
 import { AppEventBus } from '@application/event-bus/app-event-bus.service';
 import { IDENTITY_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';

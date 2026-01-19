@@ -1,7 +1,7 @@
 import type { Observable } from 'rxjs';
-import type { WorkspaceOwnerType } from '@domain/identity/types/identity.types';
-import type { WorkspaceModule } from '@domain/workspace/models/workspace-module.model';
-import type { Workspace } from '@domain/workspace/models/workspace.model';
+import type { WorkspaceOwnerType } from '@domain/account/entities/identity.entity';
+import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
+import type { Workspace } from '@domain/workspace/entities/workspace.entity';
 
 export interface WorkspaceRepository {
   getWorkspacesByOwner(
