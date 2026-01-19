@@ -33,6 +33,9 @@ const initialState: AuthState = {
   error: null,
 };
 
+const toErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 export const AuthStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
@@ -55,9 +58,9 @@ export const AuthStore = signalStore(
               loading: false,
               error: null,
             }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),
@@ -75,9 +78,9 @@ export const AuthStore = signalStore(
               status: 'authenticated',
               loading: false,
             }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),
@@ -95,9 +98,9 @@ export const AuthStore = signalStore(
               status: 'authenticated',
               loading: false,
             }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),
@@ -115,9 +118,9 @@ export const AuthStore = signalStore(
               status: 'unauthenticated',
               loading: false,
             }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),
@@ -130,9 +133,9 @@ export const AuthStore = signalStore(
         exhaustMap((email) => repository.sendPasswordReset(email)),
         tapResponse({
           next: () => patchState(store, { loading: false }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),
@@ -150,9 +153,9 @@ export const AuthStore = signalStore(
               status: 'authenticated',
               loading: false,
             }),
-          error: (error: Error) =>
+          error: (error: unknown) =>
             patchState(store, {
-              error: error.message,
+              error: toErrorMessage(error),
               status: 'error',
               loading: false,
             }),

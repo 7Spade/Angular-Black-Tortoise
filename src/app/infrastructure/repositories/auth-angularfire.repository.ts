@@ -73,6 +73,14 @@ export class AuthAngularFireRepository implements AuthRepository {
         displayName: update.displayName,
         photoURL: update.photoUrl,
       }),
-    ).pipe(map(() => toAuthUser(currentUser)));
+    ).pipe(
+      map(() => {
+        const updatedUser = this.auth.currentUser;
+        if (!updatedUser) {
+          throw new Error('No authenticated user.');
+        }
+        return toAuthUser(updatedUser);
+      }),
+    );
   }
 }
