@@ -8,12 +8,24 @@ import {
 } from '@angular/fire/firestore';
 import { map } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
-import type { WorkspaceOwnerType } from '@domain/account/entities/identity.entity';
-import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
-import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 import type { WorkspaceRepository } from '@shared/interfaces/workspace-repository.interface';
 import { Collections } from '../collections/collection-names';
 import { asString, asStringArray } from '../utils/firestore-mappers';
+
+// DTOs for infrastructure layer
+interface Workspace {
+  readonly id: string;
+  readonly ownerId: string;
+  readonly ownerType: WorkspaceOwnerType;
+  readonly moduleIds: string[];
+}
+
+interface WorkspaceModule {
+  readonly id: string;
+  readonly workspaceId: string;
+  readonly moduleKey: string;
+}
 
 @Injectable()
 export class WorkspaceFirestoreRepository implements WorkspaceRepository {

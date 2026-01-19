@@ -9,16 +9,48 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, pipe, tap } from 'rxjs';
-import type {
-  BotAccount,
-  OrganizationAccount,
-  UserAccount,
-  WorkspaceOwnerType,
-} from '@domain/account/entities/identity.entity';
-import type { Partner, Team } from '@domain/membership/entities/membership.entity';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 import { AppEventBus } from '@application/event-bus/app-event-bus.service';
 import { IDENTITY_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';
+
+// Legacy interfaces for compatibility - will be removed after infrastructure update
+interface UserAccount {
+  readonly id: string;
+  readonly type: 'user';
+  readonly organizationIds: string[];
+  readonly teamIds: string[];
+  readonly partnerIds: string[];
+  readonly workspaceIds: string[];
+}
+
+interface OrganizationAccount {
+  readonly id: string;
+  readonly type: 'organization';
+  readonly memberIds: string[];
+  readonly teamIds: string[];
+  readonly partnerIds: string[];
+  readonly workspaceIds: string[];
+}
+
+interface BotAccount {
+  readonly id: string;
+  readonly type: 'bot';
+}
+
+interface Team {
+  readonly id: string;
+  readonly type: 'team';
+  readonly organizationId: string;
+  readonly memberIds: string[];
+}
+
+interface Partner {
+  readonly id: string;
+  readonly type: 'partner';
+  readonly organizationId: string;
+  readonly memberIds: string[];
+}
 
 export interface IdentityState {
   users: UserAccount[];

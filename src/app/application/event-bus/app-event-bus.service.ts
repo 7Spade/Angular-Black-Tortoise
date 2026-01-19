@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { filter, map, Subject } from 'rxjs';
 import type { Observable } from 'rxjs';
-import type { WorkspaceOwnerType } from '@domain/account/entities/identity.entity';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 
 export interface WorkspaceOwnerSelection {
   readonly ownerId: string;

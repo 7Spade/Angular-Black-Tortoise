@@ -11,15 +11,27 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, filter, pipe, tap } from 'rxjs';
-import type { WorkspaceOwnerType } from '@domain/account/entities/identity.entity';
-import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
-import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 import {
   AppEventBus,
   WorkspaceOwnerSelection,
 } from '@application/event-bus/app-event-bus.service';
 import { WORKSPACE_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { WorkspaceRepository } from '@shared/interfaces/workspace-repository.interface';
+
+// Legacy interfaces for compatibility - will be removed after infrastructure update
+interface Workspace {
+  readonly id: string;
+  readonly ownerId: string;
+  readonly ownerType: WorkspaceOwnerType;
+  readonly moduleIds: string[];
+}
+
+interface WorkspaceModule {
+  readonly id: string;
+  readonly workspaceId: string;
+  readonly moduleKey: string;
+}
 
 export interface WorkspaceState {
   workspaces: Workspace[];
