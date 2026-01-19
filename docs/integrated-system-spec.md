@@ -1,8 +1,32 @@
 # 多身份工作區系統完整設計規格
 
-> **版本**: 1.0  
+> **版本**: 1.1  
 > **最後更新**: 2026-01-19  
 > **適用技術棧**: Angular 20 + Firebase + Material Design 3
+
+### Copilot Guardrails (防誤解規範)
+- **本文件是唯一權威規格**，不得以「方便」或「相容」為理由新增泛用、模稜兩可或重複的文件。
+- **不得建立無語意的範本或雜項檔案**（generic junk files）。
+- 所有新增規格必須明確對應 **DDD Boundaries**，避免擴散或混用概念。
+- 任何新增類型或實體必須 **可追溯到 Domain Context**，不得臨時造型別。
+
+### 前置條件 (Domain Artifact 必備)
+在實作本規格前，必須先存在以下 Domain Artifact，且不得以 UI/DTO 取代：
+- **Value Objects**: `IdentityId`, `Email`, `WorkspaceId`, `WorkspaceOwner`, `WorkspaceQuota`, `MembershipId`, `ModuleId`
+  - `src/app/domain/identity/value-objects/identity-id.value-object.ts`
+  - `src/app/domain/shared/value-objects/email.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-id.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-owner.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-quota.value-object.ts`
+  - `src/app/domain/membership/value-objects/membership-id.value-object.ts`
+  - `src/app/domain/modules/value-objects/module-id.value-object.ts`
+- **Entities**: `User`, `Organization`, `Bot`, `Team`, `Partner`, `Workspace`, `WorkspaceModule`
+  - `src/app/domain/identity/entities/`
+  - `src/app/domain/membership/entities/`
+  - `src/app/domain/workspace/entities/`
+  - `src/app/domain/modules/entities/`
+- **Aggregate Root**: `WorkspaceAggregate`
+  - `src/app/domain/workspace/aggregates/workspace.aggregate.ts`
 
 ---
 
@@ -30,19 +54,23 @@
 │                   (全局外殼)                             │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  Account Layer (身份層)                                  │
+│  Identity Layer (身份層)                                 │
 │  ├─ User (個人用戶)                                      │
 │  ├─ Organization (組織)                                  │
-│  ├─ Team (團隊 - 組織內部單位)                           │
-│  ├─ Partner (夥伴 - 組織外部單位)                        │
 │  └─ Bot (服務帳號)                                       │
+│                                                         │
+│  ↓                                                      │
+│                                                         │
+│  Membership Layer (成員關係)                             │
+│  ├─ Team (組織內部分組)                                  │
+│  └─ Partner (外部協作分組)                               │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
 │  Workspace Layer (工作區層)                              │
 │  ├─ ownerId: User | Organization                        │
 │  ├─ ownerType: 'user' | 'organization'                  │
-│  └─ workspaceType: 'project' | 'department' | ...       │
+│  └─ moduleIds: ModuleId[]                               │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
@@ -50,11 +78,8 @@
 │  ├─ Overview (總覽)                                      │
 │  ├─ Documents (文件管理)                                 │
 │  ├─ Tasks (任務管理)                                     │
-│  ├─ Members (成員管理)                                   │
-│  ├─ Permissions (權限設定)                               │
-│  ├─ Audit (稽核記錄)                                     │
 │  ├─ Settings (工作區設定)                                │
-│  └─ Journal (活動日誌)                                   │
+│  └─ Calendar (行事曆)                                    │
 │                                                         │
 │  ↓                                                      │
 │                                                         │
@@ -67,17 +92,17 @@
 ### 1.2 關鍵設計原則
 
 #### 身份獨立性
-- **User / Organization / Bot / Team / Partner** 都是獨立的身份實體
-- 每個身份都有唯一 ID 和專屬配置
+- **User / Organization / Bot** 是可登入的身份實體 (Identity Layer)
+- **Team / Partner** 屬於 Membership Layer 的成員分組,不是可登入身份
 - 身份之間不存在嵌套關係,僅存在成員關係
 
 #### 擁有權明確性
 - **Workspace 只能由 User 或 Organization 擁有**
 - Team / Partner 不能直接擁有 Workspace
-- 使用 `ownerId` + `ownerType` 的聯合型別設計
+- 使用 `WorkspaceOwner` Value Object 封裝 `ownerId` + `ownerType`
 
 #### 成員關係管理
-- Organization / Team / Partner 透過 `memberIds: string[]` 關聯成員
+- Organization / Team / Partner 透過 `memberIds` 關聯成員
 - 不在實體中嵌套完整 User 物件,僅儲存 ID 引用
 - 成員資料透過 Repository 查詢取得
 
@@ -92,22 +117,28 @@
 
 ### 2.1 身份類型定義
 
-**可登入和切換的帳號類型 (Account Types):**
+**可登入和切換的帳號類型 (Identity Types):**
 
 ```typescript
-enum AccountType {
-  User = 'user',                    // 個人用戶帳號
-  Organization = 'organization',    // 組織帳號
-  Bot = 'bot'                       // 服務帳號 (API用)
-}
+type IdentityType = 'user' | 'organization' | 'bot';
+```
+
+**成員關係類型 (Membership Types):**
+
+```typescript
+type MembershipType = 'team' | 'partner';
+```
+
+**存取主體類型 (Access Subject Types):**
+
+```typescript
+type AccessSubjectType = 'user' | 'organization' | 'team' | 'partner';
 ```
 
 **重要說明:**
-- **只有以上三種是真正的帳號 (Account)**,可以登入和在身份切換器中切換
-- **Team (團隊) 和 Partner (夥伴) 不是獨立帳號**
-- Team 是 Organization 內部從成員中分組的概念
-- Partner 是 Organization 的外部協作者分組
-- Team 和 Partner 的管理介面在切換到 Organization 身份後顯示
+- **只有以上三種是可登入身份 (Identity)**：User / Organization / Bot
+- **Team / Partner 不是獨立登入身份**，僅是 Organization 下的成員分組視角
+- Identity Switcher (Account Switcher) 允許在 Organization 下切換 Team / Partner 的 **上下文範圍**
 
 ### 2.2 User (個人用戶)
 
@@ -121,12 +152,11 @@ enum AccountType {
 **屬性**:
 ```typescript
 interface User {
-  id: string;                    // 唯一識別碼
-  email: string;                 // 電子郵件
-  displayName: string;           // 顯示名稱
-  photoURL: string;              // 頭像 URL
-  createdAt: Timestamp;          // 創建時間
+  id: IdentityId;                // 唯一識別碼 (Value Object)
   organizationIds: string[];     // 所屬組織 ID 列表
+  teamIds: string[];             // 所屬團隊 ID 列表
+  partnerIds: string[];          // 所屬夥伴 ID 列表
+  workspaceIds: string[];        // 可存取的工作區 ID
 }
 ```
 
@@ -148,23 +178,11 @@ interface User {
 **屬性**:
 ```typescript
 interface Organization {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 組織名稱
-  logoURL: string;                 // 組織 Logo
-  domain: string;                  // 組織域名 (如 company.com)
-  
-  // 組織成員 (User.id 列表)
+  id: IdentityId;                  // 唯一識別碼 (Value Object)
   memberIds: string[];             // 組織的正式成員
-  
-  // 內部團隊
   teamIds: string[];               // Team.id 列表
-  
-  // 外部夥伴
   partnerIds: string[];            // Partner.id 列表
-  
-  settings: OrganizationSettings;  // 組織設定
-  createdAt: Timestamp;            // 創建時間
-  ownerId: string;                 // 組織擁有者 User.id
+  workspaceIds: string[];          // 可存取的工作區 ID
 }
 ```
 
@@ -193,21 +211,14 @@ interface Organization {
 - Team 成員**必須是該 Organization 的成員** (在 Organization.memberIds 中)
 - **不能獨立擁有 Workspace**
 - **不會出現在身份切換器的主列表中**
-- 僅在切換到對應 Organization 身份後,在身份切換器中顯示
+- 僅在對應 Organization 身份下的 Team 區塊中顯示,可切換上下文
 
 **屬性**:
 ```typescript
 interface Team {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 團隊名稱
+  id: MembershipId;                // 唯一識別碼 (Value Object)
   organizationId: string;          // 所屬組織 ID
-  
-  // 成員列表 (必須是 Organization.memberIds 的子集合)
   memberIds: string[];             // User.id[]
-  
-  leaderId: string;                // 團隊負責人 User.id (也必須在 memberIds 中)
-  description: string;             // 團隊描述
-  createdAt: Timestamp;            // 創建時間
 }
 ```
 
@@ -235,8 +246,7 @@ interface Team {
 **限制**:
 - ❌ Team 不能直接創建 Workspace
 - ❌ Team 不能擁有 Workspace
-- ❌ Team 不是可切換的身份
-- ✅ Team 只是 Organization 內部的成員分組方式
+- ✅ Team 不是登入身份，但可在 Identity Switcher 中切換 **Team 上下文**
 
 ### 2.5 Partner (夥伴) - 外部協作者分組
 
@@ -248,25 +258,14 @@ interface Team {
 - 可以是個人自由工作者或外部公司的代表
 - **不能獨立擁有 Workspace**
 - **不會出現在身份切換器的主列表中**
-- 僅在切換到對應 Organization 身份後,在身份切換器中顯示
+- 僅在對應 Organization 身份下的 Partner 區塊中顯示,可切換上下文
 
 **屬性**:
 ```typescript
 interface Partner {
-  id: string;                      // 唯一識別碼
-  name: string;                    // 夥伴名稱 (公司名或個人名)
+  id: MembershipId;                // 唯一識別碼 (Value Object)
   organizationId: string;          // 關聯的 Organization ID
-  
-  // 外部成員列表 (User.id[], 不在 Organization.memberIds 中)
-  memberIds: string[];
-  
-  contactEmail: string;            // 主要聯絡信箱
-  contractInfo: PartnerContract;   // 合約資訊 (可選)
-  
-  // 存取等級
-  accessLevel: 'limited' | 'standard' | 'full';
-  
-  createdAt: Timestamp;            // 建立時間
+  memberIds: string[];             // 外部成員列表
 }
 ```
 
@@ -310,9 +309,8 @@ interface Partner {
 
 **限制**:
 - ❌ Partner 不能創建 Workspace
-- ❌ Partner 不是可切換的身份
+- ✅ Partner 不是登入身份，但可在 Identity Switcher 中切換 **Partner 上下文**
 - ❌ Partner 成員不能邀請其他人加入 Organization
-- ✅ Partner 只是 Organization 管理外部協作者的方式
 
 ### 2.6 Bot (服務帳號)
 
@@ -322,12 +320,7 @@ interface Partner {
 - 無法登入 UI 介面
 
 **屬性**:
-- `id`: string - 唯一識別碼
-- `name`: string - 服務名稱
-- `apiKey`: string - API 金鑰
-- `permissions`: string[] - 權限列表
-- `ownerId`: string - 擁有者 ID (User 或 Organization)
-- `createdAt`: Timestamp - 創建時間
+- `id`: IdentityId - 唯一識別碼 (Value Object)
 
 **使用場景**:
 - CI/CD 整合
@@ -344,47 +337,25 @@ interface Partner {
 - 邏輯容器,用於組織相關工作內容
 - 包含多個功能模組
 - 明確的擁有者和存取控制
+- **只有 User / Organization 可擁有 Workspace**，每個擁有者可持有多個 Workspace
+- **Workspace 與 Owner 的關聯必須嚴格維持**，不得新增其他擁有者類型
 
 **核心屬性**:
 ```typescript
 interface Workspace {
-  id: string;                              // 唯一識別碼
-  name: string;                            // 工作區名稱
-  description: string;                     // 描述
-  
-  // 擁有者資訊 (聯合型別設計)
-  ownerId: string;                         // User.id 或 Organization.id
-  ownerType: 'user' | 'organization';      // 擁有者類型
-  
-  // 工作區類型
-  workspaceType: WorkspaceType;            // 專案/部門/客戶/活動等
-  
-  // 模組配置
-  enabledModules: ModuleType[];            // 啟用的模組列表
-  
-  // 元資料
-  icon: string;                            // 工作區圖標
-  color: string;                           // 主題顏色
-  createdAt: Timestamp;                    // 創建時間
-  updatedAt: Timestamp;                    // 更新時間
-  archivedAt?: Timestamp;                  // 封存時間
-  
-  // 成員存取控制 (透過 Repository 查詢)
-  // 不直接儲存 memberIds,而是透過 ACL 或 Permission 模型管理
+  id: WorkspaceId;                         // 唯一識別碼 (Value Object)
+  owner: WorkspaceOwner;                   // 擁有者 Value Object
+  moduleIds: string[];                     // 模組 ID 列表
 }
 ```
 
 **工作區類型**:
-```typescript
-enum WorkspaceType {
-  Project = 'project',           // 專案工作區
-  Department = 'department',     // 部門工作區
-  Client = 'client',             // 客戶工作區
-  Campaign = 'campaign',         // 活動/行銷工作區
-  Product = 'product',           // 產品工作區
-  Internal = 'internal'          // 內部工作區
-}
-```
+- 目前只有 **Project** 一種工作區類型 (MVP 階段)。
+- **禁止新增 workspaceType 欄位**，如需擴展，必須先完成 Domain 擴充與規格更新。
+
+**生命周期與配額**:
+- Workspace 的生命週期、配額與擁有權資訊由 `WorkspaceAggregate` 封裝。
+- 不可在 UI/Infrastructure 層直接新增或修改這些欄位。
 
 **關鍵規則**:
 1. **擁有者限制**: 只能是 User 或 Organization
@@ -399,25 +370,22 @@ enum WorkspaceType {
 - 每個模組提供特定業務功能
 - 可獨立啟用/停用
 
-**標準模組列表**:
+**標準模組列表** (對應 `ModuleType`):
 
 | 模組 | 識別碼 | 描述 | 預設啟用 |
 |------|--------|------|----------|
 | Overview | `overview` | 總覽儀表板 | ✓ |
 | Documents | `documents` | 文件與資料夾管理 | ✓ |
 | Tasks | `tasks` | 任務與待辦事項 | ✓ |
-| Members | `members` | 成員與團隊管理 | ✓ |
-| Permissions | `permissions` | 權限與角色設定 | - |
-| Audit | `audit` | 稽核日誌與合規 | - |
+| Calendar | `calendar` | 行事曆 | ✓ |
 | Settings | `settings` | 工作區設定 | ✓ |
-| Journal | `journal` | 活動時間軸 | ✓ |
 
 **模組權限**:
 ```typescript
 interface ModulePermission {
   moduleId: string;
   accountId: string;              // User/Team/Partner ID
-  accountType: AccountType;
+  accountType: AccessSubjectType;
   role: 'viewer' | 'editor' | 'admin';
   grantedAt: Timestamp;
 }
@@ -431,7 +399,7 @@ interface ModulePermission {
 
 **步驟**:
 1. User 透過「身份切換器」選擇「建立新組織」
-2. 填寫組織基本資訊 (名稱、Logo、域名)
+2. 填寫組織基本資訊 (名稱)
 3. 設定組織類型和初始設定
 4. 系統創建 Organization 實體
 5. 創建者自動成為 Organization Owner
@@ -443,8 +411,7 @@ interface ModulePermission {
   ↓ 點擊「建立組織」
 建立組織對話框 (Dialog)
   ├─ 組織名稱 (必填)
-  ├─ 組織域名 (可選)
-  ├─ Logo 上傳 (可選)
+  ├─ 視覺資訊 (可選, Presentation 層)
   └─ 組織描述 (可選)
   ↓ 確認
 組織創建成功
@@ -695,26 +662,15 @@ interface ModulePermission {
 interface PartnerAccess {
   partnerId: string;
   workspaceId: string;
-  
-  // 存取等級
-  accessLevel: 'limited' | 'standard' | 'full';
-  
-  // 允許的模組
   allowedModules: ModuleType[];
-  
-  // 操作限制
   restrictions: {
-    canExport: boolean;        // 是否可匯出資料
-    canInvite: boolean;        // 是否可邀請他人
-    canDelete: boolean;        // 是否可刪除內容
-    canComment: boolean;       // 是否可留言
-    canEdit: boolean;          // 是否可編輯
+    canExport: boolean;
+    canInvite: boolean;
+    canDelete: boolean;
+    canComment: boolean;
+    canEdit: boolean;
   };
-  
-  // 存取期限 (可選)
   expiresAt?: Timestamp;
-  
-  // 授權時間
   grantedAt: Timestamp;
   grantedBy: string;           // User.id
 }
@@ -785,11 +741,11 @@ Acme Corp (Organization)
 ├─ Marketing Campaign (Workspace)
 │  ├─ 指派團隊: Marketing Team
 │  ├─ 授權夥伴: Design Agency Inc.
-│  └─ 啟用模組: Documents, Tasks, Members
+│  └─ 啟用模組: Documents, Tasks, Calendar
 │
 ├─ Engineering Projects (Workspace)
 │  ├─ 指派團隊: Engineering Team, QA Team
-│  └─ 啟用模組: Overview, Documents, Tasks, Audit
+│  └─ 啟用模組: Overview, Documents, Tasks, Calendar
 │
 └─ Client Portal (Workspace)
    ├─ 授權夥伴: Client ABC Corp
@@ -800,13 +756,53 @@ Acme Corp (Organization)
 
 ## 5. 切換器系統設計
 
-### 5.1 身份切換器 (Account Switcher)
+### 5.1 Identity Switcher (Account Switcher, 必備)
+
+**設計目標**:
+- 使用者可在 **User / Organization / Team / Partner** 之間快速切換
+- Team/Partner 為 **Organization 的成員分組視角**，不是獨立登入身份
+- 切換僅改變 **作用中上下文**，不改變已登入身份
+- Workspace 始終是獨立邏輯容器，不因切換而合併或混淆資料結構
+
+```
+┌────────────────────────────────────────┐
+│ 【Personal account】                   │
+│   [👤] John Doe                        │
+│    User                                │
+├────────────────────────────────────────┤
+│ 【Organization】                       │
+│ ✓ [🏢] Acme Corporation                │
+│    Organization · Owner                │
+│   [🏢] Tech Startup Inc                │
+│    Organization · Admin                │
+│   [+ New Organization]                 │
+├────────────────────────────────────────┤
+│ 【Team】(Acme Corporation)              │
+│   [👥] Engineering Team                │
+│    12 member · John Doe (Lead)         │
+│   [👥] Design Team                     │
+│    8 member · Jane Smith (Lead)        │
+│   [+ New Team]                         │
+├────────────────────────────────────────┤
+│ 【Partner】(Acme Corporation)           │
+│   [🤝] Design Agency Inc               │
+│    3 member · Standard Access          │
+│   [🤝] Cloud Services Co               │
+│    2 member · Limited Access           │
+│   [+ New Partner]                      │
+└────────────────────────────────────────┘
+```
+
+**切換規則**:
+- **User/Organization**: 直接切換主身份
+- **Team/Partner**: 僅在所屬 Organization 下顯示，切換後保留 Organization 身份
+ - **只能存在一個 Identity Switcher 與一個 Workspace Switcher**
 
 **功能定位**:
-- 在不同帳號身份 (User / Organization) 之間快速切換
-- 統一管理所有可用身份
-- 支援直接創建新組織
-- **當切換到 Organization 身份時**,動態顯示該組織的 Team 和 Partner 管理區塊
+ - 在不同帳號身份 (User / Organization) 之間快速切換
+ - 統一管理所有可用身份
+ - 支援直接創建新組織
+ - **當切換到 Organization 身份時**,動態顯示該組織的 Team 和 Partner 上下文區塊
 
 **位置**: Header 右上角
 
@@ -845,8 +841,7 @@ Acme Corp (Organization)
 ```
 
 **重要說明**:
-- Team 和 Partner **不會**出現在此列表中
-- 因為它們不是可切換的帳號身份
+- Team / Partner 不是登入身份，但在切換到 Organization 身份後會出現 **Team/Partner 上下文** 選擇
 
 ---
 
@@ -924,16 +919,14 @@ if (currentAccount.type === 'organization') {
 5. 重新開啟選單時,顯示該 Organization 的 Team 和 Partner 區塊
 
 **點擊 Team 項目**:
-- **不會切換身份** (因為 Team 不是帳號)
-- 開啟「團隊詳情」側邊抽屜或對話框
-- 顯示團隊成員、負責人、描述等資訊
-- 提供「編輯團隊」、「管理成員」等操作
+- **不會切換登入身份**，改為切換 **Team 上下文**
+- 重新載入 Workspace 列表並標註 Team 指派
+- 可透過管理入口查看團隊詳情與成員
 
 **點擊 Partner 項目**:
-- **不會切換身份** (因為 Partner 不是帳號)
-- 開啟「夥伴詳情」側邊抽屜或對話框
-- 顯示夥伴成員、存取等級、授權 Workspace 等資訊
-- 提供「編輯夥伴」、「管理權限」等操作
+- **不會切換登入身份**，改為切換 **Partner 上下文**
+- 重新載入 Workspace 列表並標註 Partner 授權
+- 可透過管理入口查看夥伴詳情與權限
 
 **點擊 [+ 建立新團隊]**:
 1. 開啟「建立團隊」對話框
@@ -953,7 +946,7 @@ if (currentAccount.type === 'organization') {
 **建立組織流程**:
 1. 點擊「建立新組織」
 2. 彈出建立組織對話框
-3. 填寫組織資訊 (名稱、Logo、域名)
+3. 填寫組織資訊 (名稱)
 4. 組織創建成功
 5. 自動切換至新組織身份
 6. 身份切換器現在顯示新組織的 Team 和 Partner 區塊 (初始為空)
@@ -1059,15 +1052,15 @@ Style:
 ├────────────────────────────────────────┤
 │ 【最近使用】                            │
 │ ✓ [📝] Personal Notes                 │
-│    Internal · Owner                    │
+│    Owner                               │
 │   [📊] Side Project                    │
-│    Project · Owner                     │
+│    Owner                               │
 ├────────────────────────────────────────┤
 │ 【我的工作區】                          │
 │   [📁] Documents Archive              │
-│    Internal · Owner                    │
+│    Owner                               │
 │   [💡] Ideas & Research               │
-│    Project · Owner                     │
+│    Owner                               │
 │   [+ 建立個人工作區]                    │ ← User 可創建
 └────────────────────────────────────────┘
 ```
@@ -1082,17 +1075,17 @@ Style:
 ├────────────────────────────────────────┤
 │ 【最近使用】                            │
 │ ✓ [📁] Marketing Campaign             │
-│    Project · 12 members                │
+│    Owner · 12 members                  │
 │   [📊] Q4 Analytics                    │
-│    Department · 8 members              │
+│    Member · 8 members                  │
 ├────────────────────────────────────────┤
 │ 【組織工作區】                          │
 │   [🏢] Client Portal                   │
-│    Client · Admin                      │
+│    Admin                               │
 │   [💼] HR Department                   │
-│    Department · Member                 │
+│    Member                              │
 │   [🔧] Engineering Projects            │
-│    Project · Engineering Team          │ ← 標註指派的 Team
+│    Engineering Team (指派)             │ ← 標註指派的 Team
 │   [+ 建立組織工作區]                    │ ← Organization 可創建
 ├────────────────────────────────────────┤
 │ 【透過團隊存取】                        │ ← 透過 Team 指派獲得存取權
@@ -1126,10 +1119,9 @@ Style:
 - ✅ 可看到透過 Team 指派獲得存取權的 Workspace
 - ✅ 可看到作為 Partner 被授權的 Workspace (標註為外部協作)
 
-**重要**: Team 和 Partner 不是可切換的身份,因此:
-- ❌ 不會有「Team 身份下」的工作區列表
-- ❌ 不會有「Partner 身份下」的工作區列表
-- ✅ 相關 Workspace 會在對應的 Organization 或 User 身份下顯示
+**重要**: Team / Partner 不是登入身份，但 Identity Switcher 會設定其上下文:
+- ✅ Workspace 列表仍在 Organization 身份下顯示
+- ✅ 依 Team / Partner 上下文篩選可見 Workspace
 
 ---
 
@@ -1141,9 +1133,7 @@ Style:
   ↓ 點擊「建立個人工作區」
 建立工作區對話框
   ├─ 工作區名稱 (必填)
-  ├─ 工作區類型 (Project/Internal/...)
   ├─ 描述 (可選)
-  ├─ 圖標和顏色選擇
   └─ 初始模組選擇
   ↓ 確認
 工作區創建成功
@@ -1158,9 +1148,7 @@ Style:
   ↓ 點擊「建立組織工作區」
 建立工作區對話框
   ├─ 工作區名稱 (必填)
-  ├─ 工作區類型 (Project/Department/Client/...)
   ├─ 描述 (可選)
-  ├─ 圖標和顏色選擇
   └─ 初始模組選擇
   ↓ 確認
 工作區創建成功
@@ -1182,19 +1170,19 @@ Style:
 ```typescript
 // Owner (擁有者)
 [📁] Marketing Campaign
-Project · Owner
+Owner
 
 // 直接成員
 [📊] Analytics Dashboard  
-Department · Member
+Member
 
 // 透過 Team 指派
 [🔧] Engineering Projects
-Project · Engineering Team
+Engineering Team (指派)
 
 // Partner 協作
 [🤝] Client Portal
-Client · Partner Access (受限)
+Partner Access (受限)
 ```
 
 **視覺差異**:
@@ -1237,6 +1225,8 @@ Client · Partner Access (受限)
 
 ### 6.1 整體頁面結構
 
+> UI 元素 (Logo/Avatar) 為 Presentation 層資訊，不屬於 Domain Entity 欄位。
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Global Header (64px, 固定)                          │
@@ -1253,7 +1243,7 @@ Client · Partner Access (受限)
 │ │ • Overview  │  │ Module Toolbar            │ │   │
 │ │ • Documents │  ├───────────────────────────┤ │   │
 │ │ • Tasks     │  │                           │ │   │
-│ │ • Members   │  │   Entity Content          │ │   │
+│ │ • Calendar  │  │   Entity Content          │ │   │
 │ │ • ...       │  │                           │ │   │
 │ │             │  │                           │ │   │
 │ │             │  └───────────────────────────┘ │   │
@@ -1264,39 +1254,36 @@ Client · Partner Access (受限)
 ### 6.2 Header 詳細設計
 
 **Left Zone**:
-- Logo (32x32px)
+- Logo (32x32px, Presentation-only)
 - Workspace Switcher (280px)
 
 **Center Zone**:
 - 全局搜尋框 (400px)
-  - 搜尋範圍: 當前身份可存取的所有 Workspace
-  - 結果分類: Workspace / Documents / Tasks / Members
+- 搜尋範圍: 當前身份可存取的所有 Workspace
+- 結果分類: Workspace / Documents / Tasks / Calendar
 
 **Right Zone**:
 - 通知中心 (🔔) - 顯示未讀數量
 - 設定選單 (⚙️) - 全局設定和偏好
-- Account Switcher - 身份切換器
+- Identity Switcher (Account Switcher) - 身份切換器
 
 ### 6.3 Sidebar 模組導航
 
-**標準模組**:
+**標準模組** (對應 `ModuleType`):
 ```
 ┌─────────────────────────┐
 │ [📊] Overview           │ ← 總覽儀表板
 │ [📁] Documents          │ ← 文件管理
 │ [✅] Tasks        [5]   │ ← 任務 (徽章: 待處理數)
-│ [👥] Members            │ ← 成員管理
-│ [🔐] Permissions        │ ← 權限設定
-│ [📋] Audit              │ ← 稽核記錄
+│ [🗓️] Calendar           │ ← 行事曆
 │ [⚙️] Settings           │ ← 工作區設定
-│ [📝] Journal            │ ← 活動日誌
 └─────────────────────────┘
 ```
 
 **根據身份和權限動態顯示**:
 - **Viewer**: 僅顯示 Overview, Documents (唯讀), Tasks (唯讀)
 - **Editor**: 增加 Documents 編輯, Tasks 編輯
-- **Admin**: 增加 Members, Permissions, Settings
+- **Admin**: 增加 Settings
 - **Owner**: 完整存取所有模組
 
 ### 6.4 Main Content Area
@@ -1365,7 +1352,7 @@ Client · Partner Access (受限)
 function canAccessWorkspace(
   userId: string,
   workspaceId: string,
-  accountType: AccountType
+  accountType: 'user' | 'organization' | 'team' | 'partner'
 ): boolean {
   // 1. 檢查是否為 Workspace Owner
   if (isWorkspaceOwner(userId, workspaceId)) return true;
@@ -1474,7 +1461,7 @@ function canAccessWorkspace(
    ↓
 2. 工作區切換器 → 選擇「Engineering Projects」
    ↓
-3. Sidebar → 「Members」模組
+3. Sidebar → 「Settings」模組 (存取控制)
    ↓
 4. 點擊「指派團隊」
    ↓
@@ -1534,7 +1521,11 @@ function canAccessWorkspace(
 
 可切換的身份:
 ├─ Alice (User) - 個人帳號
-└─ Acme Corporation (Organization Member) - 組織成員
+└─ Acme Corporation (Organization) - 組織身份
+
+可切換的上下文 (在 Organization 下):
+├─ Engineering Team
+└─ Partner "Consulting Group"
 
 Alice 在 Acme Corporation 中的關係:
 ├─ 是組織的正式成員 (在 Organization.memberIds 中)
@@ -1590,7 +1581,7 @@ Alice 在 Acme Corporation 中的關係:
 ```
 
 **關鍵理解**:
-1. **Alice 只有 2 個可切換的身份**: User 和 Organization
+1. **Alice 只有 2 個可登入身份**: User 和 Organization，但可在 Organization 下切換 Team/Partner 上下文
 2. **Team 和 Partner 不是身份**: 它們是 Alice 在組織中的成員關係
 3. **存取權限來源**:
    - 直接授權: 組織直接給予的權限
@@ -1609,8 +1600,6 @@ Alice 在 Acme Corporation 中的關係:
                     │    User     │ ← 可登入的帳號
                     │             │
                     │ - id        │
-                    │ - email     │
-                    │ - name      │
                     └──────┬──────┘
                            │
                  ┌─────────┼─────────┐
@@ -1622,7 +1611,6 @@ Alice 在 Acme Corporation 中的關係:
           │Organization │ │         │ ← 可登入的帳號
           │             │ │         │
           │ - id        │ │         │
-          │ - name      │ │         │
           │ - ownerId   ├─┘         │
           │ - memberIds │←──────────┤
           └──────┬──────┘           │
@@ -1636,7 +1624,6 @@ Alice 在 Acme Corporation 中的關係:
   │     Team     │ │   Partner    ││ ← 不是帳號,是成員分組
   │              │ │              ││
   │ - id         │ │ - id         ││
-  │ - name       │ │ - name       ││
   │ - orgId      │ │ - orgId      ││
   │ - memberIds  │ │ - memberIds  ││ ← 外部 User,不在 Org.memberIds
   │   (Org成員)  │ │   (外部User)  ││
@@ -1651,12 +1638,11 @@ Alice 在 Acme Corporation 中的關係:
       │     Workspace         │   │
       │                       │   │
       │ - id                  │   │
-      │ - name                │   │
       │ - ownerId             │←──┘
       │   (User.id 或         │   可以是 User 或
       │    Organization.id)   │   Organization
       │ - ownerType           │
-      │   ('user' | 'org')    │
+      │   ('user' | 'organization') │
       └───────────┬───────────┘
                   │
                   │ 包含
@@ -1709,36 +1695,29 @@ Alice 在 Acme Corporation 中的關係:
 
 ```
 /users/{userId}
-  - email, displayName, photoURL, createdAt
   - organizationIds, teamIds, partnerIds
 
 /organizations/{orgId}
-  - name, logoURL, domain
   - ownerId, memberIds, teamIds, partnerIds
-  - settings, createdAt
 
 /teams/{teamId}
-  - name, organizationId
-  - memberIds, leaderId
-  - description, createdAt
+  - organizationId
+  - memberIds
 
 /partners/{partnerId}
-  - name, organizationId
+  - organizationId
   - memberIds, contactEmail
-  - accessLevel, contractInfo, createdAt
 
 /workspaces/{workspaceId}
-  - name, description
-  - ownerId, ownerType, workspaceType
-  - enabledModules, icon, color
-  - createdAt, updatedAt, archivedAt
+  - ownerId, ownerType
+  - moduleIds
 
 /workspaces/{workspaceId}/permissions/{permissionId}
   - accountId, accountType, role
   - grantedAt, grantedBy
 
 /workspaces/{workspaceId}/modules/{moduleId}
-  - moduleType, config, enabled
+  - moduleKey
   - /entities/{entityId} (sub-collection for module entities)
 ```
 
@@ -1787,7 +1766,6 @@ async function getUserWorkspaces(userId: string): Promise<Workspace[]> {
 async function getOrganizationTeams(orgId: string): Promise<Team[]> {
   return await db.collection('teams')
     .where('organizationId', '==', orgId)
-    .orderBy('name')
     .get();
 }
 ```
@@ -1830,10 +1808,10 @@ async function getWorkspacePermissions(
    - 清晰的權限和存取控制
 
 4. **完善的切換器體系**
-   - **身份切換器**: 
-     - 管理可登入的帳號 (User, Organization)
-     - 支援直接創建新組織
-     - **動態顯示**: 切換到 Organization 時顯示 Team 和 Partner 管理區塊
+    - **身份切換器**: 
+      - 管理可登入的帳號 (User, Organization)
+      - 支援直接創建新組織
+      - **動態顯示**: Organization 身份下提供 Team / Partner 上下文切換
    - **工作區切換器**: 
      - 在當前身份下切換 Workspace
      - 根據身份類型顯示適當的 Workspace 分類
@@ -1843,10 +1821,10 @@ async function getWorkspacePermissions(
      - 提供便捷的管理介面入口
 
 5. **統一的 UI/UX 模式**
-   - Material Design 3 設計語言
-   - 響應式佈局適配各種裝置
-   - 無障礙設計符合 WCAG 2.1 AA 標準
-   - 一致的互動模式和視覺回饋
+    - Material Design 3 設計語言
+    - 響應式佈局適配各種裝置
+    - 無障礙設計符合 WCAG 2.1 AA 標準
+    - 一致的互動模式和視覺回饋
 
 ### 關鍵概念對比
 
@@ -1854,7 +1832,7 @@ async function getWorkspacePermissions(
 |------|------|-------------|------|---------|
 | **是否為帳號** | ✅ 是 | ✅ 是 | ❌ 否 | ❌ 否 |
 | **可否登入** | ✅ 可以 | ✅ 可以 | ❌ 不可以 | ❌ 不可以 |
-| **可否切換身份** | ✅ 可以 | ✅ 可以 | ❌ 不可以 | ❌ 不可以 |
+| **可否切換身份** | ✅ 可以 | ✅ 可以 | ⚠️ 上下文切換 | ⚠️ 上下文切換 |
 | **可否擁有 Workspace** | ✅ 可以 | ✅ 可以 | ❌ 不可以 | ❌ 不可以 |
 | **成員關係** | - | 包含 User | 從 Org 成員分組 | 外部 User |
 | **在切換器中** | 主列表 | 主列表 | Org 下的子區塊 | Org 下的子區塊 |
@@ -1890,7 +1868,7 @@ Partner.memberIds (外部協作者,不是組織成員)
 - **自訂模組**: 支援第三方模組擴展
 - **API 整合**: Bot 帳號用於系統整合
 - **多租戶**: Organization 隔離,支援企業級部署
-- **合規性**: Audit 模組記錄所有操作,符合合規要求
+- **合規性**: 操作記錄需求屬於未來擴展,需先在 Domain 定義後再新增模組
 - **國際化**: 支援多語言和時區
 
 ### 設計優勢

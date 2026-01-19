@@ -8,12 +8,13 @@ import {
 } from '@angular/fire/firestore';
 import { map } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
-import type { WorkspaceOwnerType } from '@domain/account/entities/identity.entity';
-import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
-import type { Workspace } from '@domain/workspace/entities/workspace.entity';
-import type { WorkspaceRepository } from '@shared/interfaces/workspace-repository.interface';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
+import type { WorkspaceRepository } from '@domain/workspace/repositories/workspace.repository.interface';
+import { Workspace } from '@domain/workspace/entities/workspace.entity';
+import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
+import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
 import { Collections } from '../collections/collection-names';
-import { asString, asStringArray } from '../utils/firestore-mappers';
+import { asString, asStringArray } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class WorkspaceFirestoreRepository implements WorkspaceRepository {
@@ -32,28 +33,13 @@ export class WorkspaceFirestoreRepository implements WorkspaceRepository {
     return collectionData(workspaceQuery, { idField: 'id' }).pipe(
       map((docs) =>
         docs.map((doc) => ({
-          id: asString(doc['id']),
-          ownerId: asString(doc['ownerId']),
-          ownerType,
+          id: WorkspaceId.create(asString(doc['id'])),
+          owner: WorkspaceOwner.create(asString(doc['ownerId']), ownerType),
           moduleIds: asStringArray(doc['moduleIds']),
         })),
       ),
-    );
-  }
-
-  getWorkspaceModules(workspaceId: string): Observable<WorkspaceModule[]> {
-    const modulesRef = collection(this.firestore, Collections.modules);
-    const modulesQuery = query(
-      modulesRef,
-      where('workspaceId', '==', workspaceId),
-    );
-    return collectionData(modulesQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: asString(doc['id']),
-          workspaceId: asString(doc['workspaceId']),
-          moduleKey: asString(doc['moduleKey']),
-        })),
+      map((workspaces) =>
+        workspaces.map((workspace) => Workspace.create(workspace)),
       ),
     );
   }

@@ -4,6 +4,7 @@ export const Collections = {
   bots: 'bots',
   teams: 'teams',
   partners: 'partners',
+  organizationMemberships: 'organization-memberships',
   workspaces: 'workspaces',
   modules: 'modules',
 } as const;

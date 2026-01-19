@@ -32,10 +32,14 @@ import { provideRouter } from '@angular/router';
 import {
   AUTH_REPOSITORY,
   IDENTITY_REPOSITORY,
+  MEMBERSHIP_REPOSITORY,
+  MODULE_REPOSITORY,
   WORKSPACE_REPOSITORY,
 } from '@application/tokens/repository.tokens';
 import { AuthAngularFireRepository } from '@infrastructure/repositories/auth-angularfire.repository';
 import { IdentityFirestoreRepository } from '@infrastructure/repositories/identity-firestore.repository';
+import { MembershipFirestoreRepository } from '@infrastructure/repositories/membership-firestore.repository';
+import { ModuleFirestoreRepository } from '@infrastructure/repositories/module-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { APP_ROUTES } from '@presentation/app.routes';
 import { environment } from '../environments/environment';
@@ -125,6 +129,8 @@ export const appConfig: ApplicationConfig = {
     provideVertexAI(() => getVertexAI()),
     { provide: AUTH_REPOSITORY, useClass: AuthAngularFireRepository },
     { provide: IDENTITY_REPOSITORY, useClass: IdentityFirestoreRepository },
+    { provide: MEMBERSHIP_REPOSITORY, useClass: MembershipFirestoreRepository },
+    { provide: MODULE_REPOSITORY, useClass: ModuleFirestoreRepository },
     { provide: WORKSPACE_REPOSITORY, useClass: WorkspaceFirestoreRepository },
 
     /**

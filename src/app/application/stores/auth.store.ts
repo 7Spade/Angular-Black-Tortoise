@@ -14,10 +14,10 @@ import type {
   AuthCredentials,
   AuthProfileUpdate,
   AuthStatus,
-  AuthUser,
-} from '@domain/account/entities/auth-user.entity';
+} from '@domain/identity/entities/auth-user.entity';
+import type { AuthUser } from '@domain/identity/entities/auth-user.entity';
 import { AUTH_REPOSITORY } from '@application/tokens/repository.tokens';
-import type { AuthRepository } from '@shared/interfaces/auth-repository.interface';
+import type { AuthRepository } from '@domain/identity/repositories/auth.repository.interface';
 
 export interface AuthState {
   user: AuthUser | null;
@@ -41,7 +41,7 @@ export const AuthStore = signalStore(
   withState(initialState),
   withComputed(({ status, user }) => ({
     isAuthenticated: computed(() => status() === 'authenticated'),
-    userId: computed(() => user()?.id ?? null),
+    userId: computed(() => user()?.id.getValue() ?? null),
   })),
   withMethods((store, repository = inject<AuthRepository>(AUTH_REPOSITORY)) => ({
     clearError(): void {

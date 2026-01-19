@@ -3,102 +3,64 @@ import {
   Firestore,
   collection,
   collectionData,
-  query,
-  where,
 } from '@angular/fire/firestore';
-import { map } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
-import type {
-  BotAccount,
-  OrganizationAccount,
-  UserAccount,
-} from '@domain/account/entities/identity.entity';
-import type { Partner, Team } from '@domain/membership/entities/membership.entity';
-import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';
+import { map } from 'rxjs/operators';
+import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
+import { IdentityId } from '@domain/identity/value-objects/identity-id.value-object';
+import { Bot } from '@domain/identity/entities/bot.entity';
+import { Organization } from '@domain/identity/entities/organization.entity';
+import { User } from '@domain/identity/entities/user.entity';
 import { Collections } from '../collections/collection-names';
-import { asString, asStringArray } from '../utils/firestore-mappers';
+import { asString, asStringArray } from '../mappers/firestore-mappers';
 
 @Injectable()
 export class IdentityFirestoreRepository implements IdentityRepository {
   private readonly firestore = inject(Firestore);
 
-  getUsers(): Observable<UserAccount[]> {
+  getUsers(): Observable<User[]> {
     const usersRef = collection(this.firestore, Collections.users);
     return collectionData(usersRef, { idField: 'id' }).pipe(
       map((docs) =>
         docs.map((doc) => ({
-          id: asString(doc['id']),
-          type: 'user' as const,
+          id: IdentityId.create(asString(doc['id'])),
           organizationIds: asStringArray(doc['organizationIds']),
           teamIds: asStringArray(doc['teamIds']),
           partnerIds: asStringArray(doc['partnerIds']),
           workspaceIds: asStringArray(doc['workspaceIds']),
         })),
       ),
+      map((users) => users.map((user) => User.create(user))),
     );
   }
 
-  getOrganizations(): Observable<OrganizationAccount[]> {
+  getOrganizations(): Observable<Organization[]> {
     const organizationsRef = collection(this.firestore, Collections.organizations);
     return collectionData(organizationsRef, { idField: 'id' }).pipe(
       map((docs) =>
         docs.map((doc) => ({
-          id: asString(doc['id']),
-          type: 'organization' as const,
+          id: IdentityId.create(asString(doc['id'])),
           memberIds: asStringArray(doc['memberIds']),
           teamIds: asStringArray(doc['teamIds']),
           partnerIds: asStringArray(doc['partnerIds']),
           workspaceIds: asStringArray(doc['workspaceIds']),
         })),
       ),
+      map((organizations) =>
+        organizations.map((organization) => Organization.create(organization)),
+      ),
     );
   }
 
-  getBots(): Observable<BotAccount[]> {
+  getBots(): Observable<Bot[]> {
     const botsRef = collection(this.firestore, Collections.bots);
     return collectionData(botsRef, { idField: 'id' }).pipe(
       map((docs) =>
         docs.map((doc) => ({
-          id: asString(doc['id']),
-          type: 'bot' as const,
+          id: IdentityId.create(asString(doc['id'])),
         })),
       ),
-    );
-  }
-
-  getTeams(organizationId: string): Observable<Team[]> {
-    const teamsRef = collection(this.firestore, Collections.teams);
-    const teamsQuery = query(
-      teamsRef,
-      where('organizationId', '==', organizationId),
-    );
-    return collectionData(teamsQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: asString(doc['id']),
-          type: 'team' as const,
-          organizationId: asString(doc['organizationId']),
-          memberIds: asStringArray(doc['memberIds']),
-        })),
-      ),
-    );
-  }
-
-  getPartners(organizationId: string): Observable<Partner[]> {
-    const partnersRef = collection(this.firestore, Collections.partners);
-    const partnersQuery = query(
-      partnersRef,
-      where('organizationId', '==', organizationId),
-    );
-    return collectionData(partnersQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: asString(doc['id']),
-          type: 'partner' as const,
-          organizationId: asString(doc['organizationId']),
-          memberIds: asStringArray(doc['memberIds']),
-        })),
-      ),
+      map((bots) => bots.map((bot) => Bot.create(bot))),
     );
   }
 }

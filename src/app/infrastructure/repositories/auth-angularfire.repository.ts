@@ -14,21 +14,25 @@ import type { User } from '@angular/fire/auth';
 import type {
   AuthCredentials,
   AuthProfileUpdate,
-  AuthUser,
-} from '@domain/account/entities/auth-user.entity';
-import type { AuthRepository } from '@shared/interfaces/auth-repository.interface';
+} from '@domain/identity/entities/auth-user.entity';
+import { AuthUser } from '@domain/identity/entities/auth-user.entity';
+import { IdentityId } from '@domain/identity/value-objects/identity-id.value-object';
+import { Email } from '@domain/shared/value-objects/email.value-object';
+import type { AuthRepository } from '@domain/identity/repositories/auth.repository.interface';
 import { Collections } from '../collections/collection-names';
 
 /**
- * Map Firebase Auth User to the domain AuthUser shape.
+ * Map Firebase Auth User to the domain AuthUser entity.
  */
-const toAuthUser = (authUser: User): AuthUser => ({
-  id: authUser.uid,
-  email: authUser.email ?? '',
-  displayName: authUser.displayName ?? '',
-  photoUrl: authUser.photoURL ?? '',
-  emailVerified: authUser.emailVerified,
-});
+const toAuthUser = (authUser: User): AuthUser => {
+  const id = IdentityId.create(authUser.uid);
+  const email = Email.create(authUser.email ?? '');
+  return AuthUser.create({
+    id,
+    email,
+    emailVerified: authUser.emailVerified,
+  });
+};
 
 const createUserProfilePayload = (
   authUser: User,

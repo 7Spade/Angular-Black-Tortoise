@@ -9,21 +9,24 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, pipe, tap } from 'rxjs';
-import type {
-  BotAccount,
-  OrganizationAccount,
-  UserAccount,
-  WorkspaceOwnerType,
-} from '@domain/account/entities/identity.entity';
-import type { Partner, Team } from '@domain/membership/entities/membership.entity';
+import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
+import type { Bot } from '@domain/identity/entities/bot.entity';
+import type { Organization } from '@domain/identity/entities/organization.entity';
+import type { User } from '@domain/identity/entities/user.entity';
+import type { Partner } from '@domain/membership/entities/partner.entity';
+import type { Team } from '@domain/membership/entities/team.entity';
 import { AppEventBus } from '@application/event-bus/app-event-bus.service';
-import { IDENTITY_REPOSITORY } from '@application/tokens/repository.tokens';
-import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';
+import {
+  IDENTITY_REPOSITORY,
+  MEMBERSHIP_REPOSITORY,
+} from '@application/tokens/repository.tokens';
+import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
+import type { MembershipRepository } from '@domain/membership/repositories/membership.repository.interface';
 
 export interface IdentityState {
-  users: UserAccount[];
-  organizations: OrganizationAccount[];
-  bots: BotAccount[];
+  users: User[];
+  organizations: Organization[];
+  bots: Bot[];
   teams: Team[];
   partners: Partner[];
   activeWorkspaceOwner: {
@@ -56,6 +59,7 @@ export const IdentityStore = signalStore(
     (
       store,
       repository = inject<IdentityRepository>(IDENTITY_REPOSITORY),
+      membershipRepository = inject<MembershipRepository>(MEMBERSHIP_REPOSITORY),
       eventBus = inject(AppEventBus),
     ) => ({
       selectWorkspaceOwner(ownerType: WorkspaceOwnerType, ownerId: string): void {
@@ -103,7 +107,9 @@ export const IdentityStore = signalStore(
       loadTeams: rxMethod<string>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          exhaustMap((organizationId) => repository.getTeams(organizationId)),
+          exhaustMap((organizationId) =>
+            membershipRepository.getTeams(organizationId),
+          ),
           tapResponse({
             next: (teams) => patchState(store, { teams, loading: false }),
             error: (error: Error) =>
@@ -114,7 +120,9 @@ export const IdentityStore = signalStore(
       loadPartners: rxMethod<string>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          exhaustMap((organizationId) => repository.getPartners(organizationId)),
+          exhaustMap((organizationId) =>
+            membershipRepository.getPartners(organizationId),
+          ),
           tapResponse({
             next: (partners) => patchState(store, { partners, loading: false }),
             error: (error: Error) =>
