@@ -11,13 +11,13 @@ export class Team {
   readonly type: 'team' = 'team';
   readonly organizationId: IdentityId;
   readonly name: DisplayName;
-  readonly memberIds: ReadonlyArray<string>;
+  readonly memberIds: readonly string[];
 
   private constructor(props: {
     id: MembershipId;
     organizationId: IdentityId;
     name: DisplayName;
-    memberIds: ReadonlyArray<string>;
+    memberIds: readonly string[];
   }) {
     this.id = props.id;
     this.organizationId = props.organizationId;
@@ -29,7 +29,7 @@ export class Team {
     id: MembershipId;
     organizationId: IdentityId;
     name: DisplayName;
-    memberIds?: ReadonlyArray<string>;
+    memberIds?: readonly string[];
   }): Team {
     return new Team({
       id: props.id,

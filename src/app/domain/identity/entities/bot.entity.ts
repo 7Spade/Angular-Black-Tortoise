@@ -10,13 +10,13 @@ export class Bot {
   readonly type: 'bot' = 'bot';
   readonly name: DisplayName;
   readonly apiKey: string;
-  readonly permissions: ReadonlyArray<string>;
+  readonly permissions: readonly string[];
 
   private constructor(props: {
     id: IdentityId;
     name: DisplayName;
     apiKey: string;
-    permissions: ReadonlyArray<string>;
+    permissions: readonly string[];
   }) {
     this.id = props.id;
     this.name = props.name;
@@ -28,7 +28,7 @@ export class Bot {
     id: IdentityId;
     name: DisplayName;
     apiKey: string;
-    permissions?: ReadonlyArray<string>;
+    permissions?: readonly string[];
   }): Bot {
     return new Bot({
       id: props.id,

@@ -10,17 +10,17 @@ export class Organization {
   readonly type: 'organization' = 'organization';
   readonly ownerId: IdentityId;
   readonly name: DisplayName;
-  readonly memberIds: ReadonlyArray<string>;
-  readonly teamIds: ReadonlyArray<string>;
-  readonly partnerIds: ReadonlyArray<string>;
+  readonly memberIds: readonly string[];
+  readonly teamIds: readonly string[];
+  readonly partnerIds: readonly string[];
 
   private constructor(props: {
     id: IdentityId;
     ownerId: IdentityId;
     name: DisplayName;
-    memberIds: ReadonlyArray<string>;
-    teamIds: ReadonlyArray<string>;
-    partnerIds: ReadonlyArray<string>;
+    memberIds: readonly string[];
+    teamIds: readonly string[];
+    partnerIds: readonly string[];
   }) {
     this.id = props.id;
     this.ownerId = props.ownerId;
@@ -34,9 +34,9 @@ export class Organization {
     id: IdentityId;
     ownerId: IdentityId;
     name: DisplayName;
-    memberIds?: ReadonlyArray<string>;
-    teamIds?: ReadonlyArray<string>;
-    partnerIds?: ReadonlyArray<string>;
+    memberIds?: readonly string[];
+    teamIds?: readonly string[];
+    partnerIds?: readonly string[];
   }): Organization {
     return new Organization({
       id: props.id,

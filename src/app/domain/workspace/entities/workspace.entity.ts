@@ -18,7 +18,7 @@ export class Workspace {
   readonly name: DisplayName;
   readonly status: WorkspaceStatus;
   readonly quota: WorkspaceQuota;
-  readonly moduleIds: ReadonlyArray<string>;
+  readonly moduleIds: readonly string[];
   readonly createdAt: Timestamp;
 
   private constructor(props: {
@@ -27,7 +27,7 @@ export class Workspace {
     name: DisplayName;
     status: WorkspaceStatus;
     quota: WorkspaceQuota;
-    moduleIds: ReadonlyArray<string>;
+    moduleIds: readonly string[];
     createdAt: Timestamp;
   }) {
     this.id = props.id;
@@ -45,7 +45,7 @@ export class Workspace {
     name: DisplayName;
     status: WorkspaceStatus;
     quota: WorkspaceQuota;
-    moduleIds?: ReadonlyArray<string>;
+    moduleIds?: readonly string[];
     createdAt: Timestamp;
   }): Workspace {
     return new Workspace({

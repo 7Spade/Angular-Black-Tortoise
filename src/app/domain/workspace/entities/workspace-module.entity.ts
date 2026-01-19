@@ -1,5 +1,6 @@
 import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
 import type { ModuleKey } from '../value-objects/module-key.value-object';
+import { ModuleConfig } from '../value-objects/module-config.value-object';
 
 /**
  * WorkspaceModule represents a module instance within a workspace.
@@ -9,13 +10,13 @@ export class WorkspaceModule {
   readonly id: string;
   readonly workspaceId: WorkspaceId;
   readonly moduleKey: ModuleKey;
-  readonly config: Record<string, unknown>;
+  readonly config: ModuleConfig;
 
   private constructor(props: {
     id: string;
     workspaceId: WorkspaceId;
     moduleKey: ModuleKey;
-    config: Record<string, unknown>;
+    config: ModuleConfig;
   }) {
     this.id = props.id;
     this.workspaceId = props.workspaceId;
@@ -27,13 +28,13 @@ export class WorkspaceModule {
     id: string;
     workspaceId: WorkspaceId;
     moduleKey: ModuleKey;
-    config?: Record<string, unknown>;
+    config?: ModuleConfig;
   }): WorkspaceModule {
     return new WorkspaceModule({
       id: props.id,
       workspaceId: props.workspaceId,
       moduleKey: props.moduleKey,
-      config: props.config ?? {},
+      config: props.config ?? ModuleConfig.create(),
     });
   }
 

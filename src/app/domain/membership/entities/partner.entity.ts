@@ -12,14 +12,14 @@ export class Partner {
   readonly type: 'partner' = 'partner';
   readonly organizationId: IdentityId;
   readonly name: DisplayName;
-  readonly memberIds: ReadonlyArray<string>;
+  readonly memberIds: readonly string[];
   readonly contactEmail: Email;
 
   private constructor(props: {
     id: MembershipId;
     organizationId: IdentityId;
     name: DisplayName;
-    memberIds: ReadonlyArray<string>;
+    memberIds: readonly string[];
     contactEmail: Email;
   }) {
     this.id = props.id;
@@ -33,7 +33,7 @@ export class Partner {
     id: MembershipId;
     organizationId: IdentityId;
     name: DisplayName;
-    memberIds?: ReadonlyArray<string>;
+    memberIds?: readonly string[];
     contactEmail: Email;
   }): Partner {
     return new Partner({
