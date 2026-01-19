@@ -1,0 +1,72 @@
+.workspace-switcher {
+  min-width: 250px;
+  max-width: 400px;
+
+  @media (max-width: 768px) {
+    min-width: 150px;
+    max-width: 200px;
+  }
+}
+
+.workspace-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+
+  .workspace-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    font-size: 0.75rem;
+    height: 20px;
+    min-height: 20px;
+    padding: 0 0.5rem;
+
+    &.mat-mdc-chip {
+      --mdc-chip-label-text-size: 0.75rem;
+    }
+  }
+}
+
+.no-workspaces {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+
+  mat-icon {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+::ng-deep .mat-mdc-select-panel {
+  .mat-mdc-optgroup-label {
+    font-weight: 600;
+    color: var(--mat-sys-primary);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .mat-mdc-option {
+    min-height: 56px;
+    padding: 0.5rem 1rem;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-high);
+    }
+
+    &.mat-mdc-option-active {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+}

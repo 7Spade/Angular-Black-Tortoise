@@ -1,0 +1,82 @@
+.identity-switcher-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  text-transform: none;
+
+  .identity-name {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    .identity-name {
+      display: none;
+    }
+  }
+}
+
+::ng-deep .identity-switcher-menu {
+  min-width: 280px;
+  max-width: 400px;
+
+  .menu-section {
+    padding: 0.5rem 0;
+
+    .section-header {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--mat-sys-on-surface-variant);
+      letter-spacing: 0.05em;
+    }
+
+    .mat-mdc-menu-item {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      &.active {
+        background-color: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-primary);
+
+        mat-icon {
+          color: var(--mat-sys-primary);
+        }
+      }
+
+      &.sub-item {
+        padding-left: 2rem;
+      }
+
+      mat-icon {
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      span {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 0.875rem;
+
+    mat-icon {
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}

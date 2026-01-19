@@ -1,94 +1,190 @@
-import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
-import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-object';
-import type { WorkspaceQuota } from '../value-objects/workspace-quota.value-object';
-import { WorkspaceLifecycle } from '../enums/workspace-lifecycle.enum';
-import { Workspace } from '../entities/workspace.entity';
+import type { Workspace } from '../entities/workspace.entity';
+import type { WorkspaceModule } from '../entities/workspace-module.entity';
+import type { ModuleKey } from '../value-objects/module-key.value-object';
+import { Result } from '../../shared/types/result.type';
+import { DomainError } from '../../shared/errors/domain.error';
+import { InvalidStateError } from '../../shared/errors/invalid-state.error';
 
 /**
  * WorkspaceAggregate is the aggregate root enforcing workspace invariants.
  * It ensures consistency across workspace state and business rules.
+ * Implements STEP 7 requirements: wraps Workspace entity, enforces consistency rules,
+ * manages WorkspaceModule collection, validates quota limits, prevents modifications
+ * on archived/deleted workspaces.
  */
 export class WorkspaceAggregate {
   private readonly workspace: Workspace;
-  private lifecycle: WorkspaceLifecycle;
-  private quota: WorkspaceQuota;
+  private readonly modules: Map<string, WorkspaceModule>;
 
   private constructor(
     workspace: Workspace,
-    lifecycle: WorkspaceLifecycle,
-    quota: WorkspaceQuota,
+    modules: Map<string, WorkspaceModule>
   ) {
     this.workspace = workspace;
-    this.lifecycle = lifecycle;
-    this.quota = quota;
+    this.modules = modules;
   }
 
   static create(props: {
-    id: WorkspaceId;
-    owner: WorkspaceOwner;
-    lifecycle: WorkspaceLifecycle;
-    quota: WorkspaceQuota;
-    moduleIds?: ReadonlyArray<string>;
+    workspace: Workspace;
+    modules?: WorkspaceModule[];
   }): WorkspaceAggregate {
-    const workspace = Workspace.create({
-      id: props.id,
-      owner: props.owner,
-      moduleIds: props.moduleIds ?? [],
-    });
-    return new WorkspaceAggregate(workspace, props.lifecycle, props.quota);
-  }
+    const modulesMap = new Map<string, WorkspaceModule>();
+    props.modules?.forEach((module) => modulesMap.set(module.id, module));
 
-  getId(): WorkspaceId {
-    return this.workspace.id;
-  }
-
-  getOwner(): WorkspaceOwner {
-    return this.workspace.owner;
-  }
-
-  getLifecycle(): WorkspaceLifecycle {
-    return this.lifecycle;
-  }
-
-  getQuota(): WorkspaceQuota {
-    return this.quota;
-  }
-
-  getModuleIds(): ReadonlyArray<string> {
-    return this.workspace.moduleIds;
+    return new WorkspaceAggregate(props.workspace, modulesMap);
   }
 
   /**
-   * Check if workspace is active.
+   * Get the underlying workspace entity
+   */
+  getWorkspace(): Workspace {
+    return this.workspace;
+  }
+
+  /**
+   * Get all modules in this workspace
+   */
+  getModules(): WorkspaceModule[] {
+    return Array.from(this.modules.values());
+  }
+
+  /**
+   * Get a specific module by id
+   */
+  getModule(moduleId: string): WorkspaceModule | null {
+    return this.modules.get(moduleId) ?? null;
+  }
+
+  /**
+   * Add a module to the workspace - validates quota and workspace status
+   */
+  addModule(module: WorkspaceModule): Result<WorkspaceAggregate, DomainError> {
+    // Check workspace status
+    if (
+      this.workspace.status.getValue() === 'archived' ||
+      this.workspace.status.getValue() === 'deleted'
+    ) {
+      return Result.fail(
+        new InvalidStateError(
+          'Cannot add module to archived or deleted workspace'
+        )
+      );
+    }
+
+    // Check if module already exists
+    if (this.modules.has(module.id)) {
+      return Result.fail(new InvalidStateError('Module already exists'));
+    }
+
+    // Check quota limits
+    const currentModuleCount = this.modules.size;
+    const maxModules = this.workspace.quota.getMaxModules();
+    if (currentModuleCount >= maxModules) {
+      return Result.fail(
+        new InvalidStateError(
+          `Cannot add module: quota limit of ${maxModules} modules reached`
+        )
+      );
+    }
+
+    // Add module to workspace entity
+    const updatedWorkspaceResult = this.workspace.addModule(module.id);
+    if (updatedWorkspaceResult.isFailure()) {
+      return Result.fail(updatedWorkspaceResult.error);
+    }
+
+    // Create new aggregate with updated state
+    const newModules = new Map(this.modules);
+    newModules.set(module.id, module);
+
+    return Result.ok(
+      new WorkspaceAggregate(updatedWorkspaceResult.value, newModules)
+    );
+  }
+
+  /**
+   * Remove a module from the workspace - validates workspace status
+   */
+  removeModule(moduleId: string): Result<WorkspaceAggregate, DomainError> {
+    // Check workspace status
+    if (
+      this.workspace.status.getValue() === 'archived' ||
+      this.workspace.status.getValue() === 'deleted'
+    ) {
+      return Result.fail(
+        new InvalidStateError(
+          'Cannot remove module from archived or deleted workspace'
+        )
+      );
+    }
+
+    // Check if module exists
+    if (!this.modules.has(moduleId)) {
+      return Result.fail(new InvalidStateError('Module does not exist'));
+    }
+
+    // Remove module from workspace entity
+    const updatedWorkspaceResult = this.workspace.removeModule(moduleId);
+    if (updatedWorkspaceResult.isFailure()) {
+      return Result.fail(updatedWorkspaceResult.error);
+    }
+
+    // Create new aggregate with updated state
+    const newModules = new Map(this.modules);
+    newModules.delete(moduleId);
+
+    return Result.ok(
+      new WorkspaceAggregate(updatedWorkspaceResult.value, newModules)
+    );
+  }
+
+  /**
+   * Archive the workspace
+   */
+  archive(): Result<WorkspaceAggregate, DomainError> {
+    const archivedWorkspaceResult = this.workspace.archive();
+    if (archivedWorkspaceResult.isFailure()) {
+      return Result.fail(archivedWorkspaceResult.error);
+    }
+
+    return Result.ok(
+      new WorkspaceAggregate(archivedWorkspaceResult.value, this.modules)
+    );
+  }
+
+  /**
+   * Activate the workspace
+   */
+  activate(): Result<WorkspaceAggregate, DomainError> {
+    const activatedWorkspaceResult = this.workspace.activate();
+    if (activatedWorkspaceResult.isFailure()) {
+      return Result.fail(activatedWorkspaceResult.error);
+    }
+
+    return Result.ok(
+      new WorkspaceAggregate(activatedWorkspaceResult.value, this.modules)
+    );
+  }
+
+  /**
+   * Check if workspace is active
    */
   isActive(): boolean {
-    return this.lifecycle === WorkspaceLifecycle.Active;
+    return this.workspace.status.getValue() === 'active';
   }
 
   /**
-   * Archive the workspace (domain logic).
+   * Check if workspace is archived
    */
-  archive(): void {
-    if (this.lifecycle === WorkspaceLifecycle.Deleted) {
-      throw new Error('Cannot archive a deleted workspace');
-    }
-    this.lifecycle = WorkspaceLifecycle.Archived;
+  isArchived(): boolean {
+    return this.workspace.status.getValue() === 'archived';
   }
 
   /**
-   * Activate the workspace (domain logic).
+   * Check if workspace is deleted
    */
-  activate(): void {
-    if (this.lifecycle === WorkspaceLifecycle.Deleted) {
-      throw new Error('Cannot activate a deleted workspace');
-    }
-    this.lifecycle = WorkspaceLifecycle.Active;
-  }
-
-  /**
-   * Check if a module can be added based on quota.
-   */
-  canAddModule(): boolean {
-    return this.quota.canAddProjects(this.workspace.moduleIds.length, 1);
+  isDeleted(): boolean {
+    return this.workspace.status.getValue() === 'deleted';
   }
 }
+

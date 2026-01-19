@@ -21,6 +21,23 @@ export const APP_ROUTES: Routes = [
       ),
   },
   {
+    path: 'workspace/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./layouts/workspace-layout/workspace-layout.component').then(
+        (module) => module.WorkspaceLayoutComponent,
+      ),
+    children: [
+      {
+        path: ':module',
+        loadComponent: () =>
+          import('./pages/module-host/module-host.component').then(
+            (module) => module.ModuleHostComponent,
+          ),
+      },
+    ],
+  },
+  {
     path: '**',
     redirectTo: 'auth/login',
   },
