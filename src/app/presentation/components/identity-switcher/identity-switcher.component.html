@@ -1,0 +1,126 @@
+<button mat-button [matMenuTriggerFor]="identityMenu" class="identity-switcher-button">
+  <mat-icon>person</mat-icon>
+  <span class="identity-label">{{ getActiveIdentityDisplay() }}</span>
+  <mat-icon>arrow_drop_down</mat-icon>
+</button>
+
+<mat-menu #identityMenu="matMenu" class="identity-menu">
+  <!-- Personal User Identity -->
+  @if (identityStore.users().length > 0) {
+    <div class="menu-section">
+      <div class="menu-section-header">Personal</div>
+      @for (user of identityStore.users(); track user.id.getValue()) {
+        <button
+          mat-menu-item
+          (click)="onSelectIdentity('user', user.id.getValue())"
+          [class.active]="
+            identityStore.activeWorkspaceOwner()?.ownerId === user.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'user'
+          ">
+          <mat-icon>person</mat-icon>
+          <span>Personal Account</span>
+          @if (
+            identityStore.activeWorkspaceOwner()?.ownerId === user.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'user'
+          ) {
+            <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+      }
+    </div>
+    <mat-divider></mat-divider>
+  }
+
+  <!-- Organizations -->
+  @if (identityStore.organizations().length > 0) {
+    <div class="menu-section">
+      <div class="menu-section-header">Organizations</div>
+      @for (org of identityStore.organizations(); track org.id.getValue()) {
+        <button
+          mat-menu-item
+          (click)="onSelectIdentity('organization', org.id.getValue())"
+          [class.active]="
+            identityStore.activeWorkspaceOwner()?.ownerId === org.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'organization'
+          ">
+          <mat-icon>business</mat-icon>
+          <span>Organization</span>
+          @if (
+            identityStore.activeWorkspaceOwner()?.ownerId === org.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'organization'
+          ) {
+            <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+
+        <!-- Teams under Organization -->
+        @if (identityStore.teams().length > 0) {
+          @for (team of identityStore.teams(); track team.id.getValue()) {
+            @if (team.organizationId.getValue() === org.id.getValue()) {
+              <button
+                mat-menu-item
+                class="sub-item"
+                (click)="onSelectIdentity('team', team.id.getValue())">
+                <mat-icon>group</mat-icon>
+                <span>Team</span>
+              </button>
+            }
+          }
+        }
+
+        <!-- Partners under Organization -->
+        @if (identityStore.partners().length > 0) {
+          @for (partner of identityStore.partners(); track partner.id.getValue()) {
+            @if (partner.organizationId.getValue() === org.id.getValue()) {
+              <button
+                mat-menu-item
+                class="sub-item"
+                (click)="onSelectIdentity('partner', partner.id.getValue())">
+                <mat-icon>handshake</mat-icon>
+                <span>Partner</span>
+              </button>
+            }
+          }
+        }
+      }
+    </div>
+    <mat-divider></mat-divider>
+  }
+
+  <!-- Bots -->
+  @if (identityStore.bots().length > 0) {
+    <div class="menu-section">
+      <div class="menu-section-header">Bots</div>
+      @for (bot of identityStore.bots(); track bot.id.getValue()) {
+        <button
+          mat-menu-item
+          (click)="onSelectIdentity('bot', bot.id.getValue())"
+          [class.active]="
+            identityStore.activeWorkspaceOwner()?.ownerId === bot.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'bot'
+          ">
+          <mat-icon>smart_toy</mat-icon>
+          <span>Bot</span>
+          @if (
+            identityStore.activeWorkspaceOwner()?.ownerId === bot.id.getValue() &&
+            identityStore.activeWorkspaceOwner()?.ownerType === 'bot'
+          ) {
+            <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (
+    identityStore.users().length === 0 &&
+    identityStore.organizations().length === 0 &&
+    identityStore.bots().length === 0
+  ) {
+    <div class="empty-state">
+      <mat-icon>person_off</mat-icon>
+      <p>No identities available</p>
+    </div>
+  }
+</mat-menu>

@@ -1,0 +1,60 @@
+<mat-toolbar color="primary" class="top-navigation">
+  <!-- App Title / Logo -->
+  <div class="app-branding">
+    <mat-icon class="app-logo">workspaces</mat-icon>
+    <span class="app-title">Angular Black Tortoise</span>
+  </div>
+
+  <!-- Spacer -->
+  <span class="spacer"></span>
+
+  <!-- Identity Switcher -->
+  <app-identity-switcher class="nav-item"></app-identity-switcher>
+
+  <!-- Workspace Switcher -->
+  <app-workspace-switcher class="nav-item"></app-workspace-switcher>
+
+  <!-- User Menu -->
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="userMenu"
+    class="user-avatar"
+    aria-label="User menu">
+    <div class="avatar-circle">
+      {{ getUserInitials() }}
+    </div>
+  </button>
+
+  <mat-menu #userMenu="matMenu" xPosition="before">
+    <div class="user-menu-header">
+      <div class="avatar-circle large">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ getUserDisplayName() }}</div>
+        @if (identityStore.users().length > 0) {
+          <div class="user-email">{{ identityStore.users()[0].email.getValue() }}</div>
+        }
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item>
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </button>
+
+    <button mat-menu-item>
+      <mat-icon>help</mat-icon>
+      <span>Help</span>
+    </button>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item>
+      <mat-icon>logout</mat-icon>
+      <span>Sign out</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
