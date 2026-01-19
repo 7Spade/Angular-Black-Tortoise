@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [MatButtonModule, MatCardModule],
+  imports: [MatCardModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="home-container">
@@ -20,11 +19,6 @@ import { MatCardModule } from '@angular/material/card';
             models, reactive stores, and AngularFire-backed authentication.
           </p>
         </mat-card-content>
-        <mat-card-actions align="end">
-          <button mat-raised-button color="primary" type="button">
-            Get Started
-          </button>
-        </mat-card-actions>
       </mat-card>
     </section>
   `,
@@ -34,9 +28,9 @@ import { MatCardModule } from '@angular/material/card';
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: calc(100vh - 64px);
+        min-height: calc(100vh - var(--app-header-height, 0px));
         padding: 24px;
-        background: var(--mat-sys-surface);
+        background: var(--mat-sys-surface, #fafafa);
       }
 
       .home-card {
