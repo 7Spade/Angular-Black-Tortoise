@@ -15,14 +15,7 @@ import type { Team } from '@domain/identity/models/team.model';
 import type { UserAccount } from '@domain/identity/models/user-account.model';
 import type { IdentityRepository } from '@shared/interfaces/identity-repository.interface';
 import { Collections } from '../collections/collection-names';
-
-const asString = (value: unknown): string =>
-  typeof value === 'string' ? value : '';
-
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
+import { asString, asStringArray } from '../utils/firestore-mappers';
 
 @Injectable()
 export class IdentityFirestoreRepository implements IdentityRepository {

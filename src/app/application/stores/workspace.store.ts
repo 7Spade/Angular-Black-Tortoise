@@ -1,4 +1,4 @@
-import { computed, inject } from '@angular/core';
+import { DestroyRef, computed, inject } from '@angular/core';
 import {
   patchState,
   signalStore,
@@ -7,6 +7,7 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { exhaustMap, pipe, tap } from 'rxjs';
@@ -90,7 +91,12 @@ export const WorkspaceStore = signalStore(
   withHooks({
     onInit(store) {
       const eventBus = inject(AppEventBus);
-      store.connectOwnerSelection(eventBus.onWorkspaceOwnerSelected());
+      const destroyRef = inject(DestroyRef);
+      store.connectOwnerSelection(
+        eventBus
+          .onWorkspaceOwnerSelected()
+          .pipe(takeUntilDestroyed(destroyRef)),
+      );
     },
   }),
 );

@@ -13,14 +13,7 @@ import type { WorkspaceModule } from '@domain/workspace/models/workspace-module.
 import type { Workspace } from '@domain/workspace/models/workspace.model';
 import type { WorkspaceRepository } from '@shared/interfaces/workspace-repository.interface';
 import { Collections } from '../collections/collection-names';
-
-const asString = (value: unknown): string =>
-  typeof value === 'string' ? value : '';
-
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
+import { asString, asStringArray } from '../utils/firestore-mappers';
 
 @Injectable()
 export class WorkspaceFirestoreRepository implements WorkspaceRepository {
