@@ -37,6 +37,12 @@ Module (Features)
 Entity (State Objects)
 ```
 
+Identity modeling follows strict ownership and membership rules:
+- **Identity types**: User, Organization, Bot, Team, Partner (all independent identities)
+- **Membership**: Organization/Team/Partner use `memberIds` (no nested user objects)
+- **Workspace ownership**: `ownerId` + `ownerType` (`user` | `organization`) only
+- **Workspace data**: no member lists; modules are tracked by `moduleIds`
+
 ### Zone-less Architecture
 
 The application uses Angular's stable zone-less change detection mode:
@@ -196,6 +202,8 @@ User Action → Method Call → rxMethod → patchState → Signal Update → UI
 5. Signal update triggers change detection
 6. UI automatically updates
 ```
+
+AuthStore is backed by an AngularFire Auth repository that exposes `authState`, sign-in, sign-up, sign-out, password reset, and profile update flows via observables.
 
 ## 🧪 Testing
 
