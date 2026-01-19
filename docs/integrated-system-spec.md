@@ -10,6 +10,24 @@
 - 所有新增規格必須明確對應 **DDD Boundaries**，避免擴散或混用概念。
 - 任何新增類型或實體必須 **可追溯到 Domain Context**，不得臨時造型別。
 
+### 前置條件 (Domain Artifact 必備)
+在實作本規格前，必須先存在以下 Domain Artifact，且不得以 UI/DTO 取代：
+- **Value Objects**: `IdentityId`, `Email`, `WorkspaceId`, `WorkspaceOwner`, `WorkspaceQuota`, `MembershipId`, `ModuleId`
+  - `src/app/domain/identity/value-objects/identity-id.value-object.ts`
+  - `src/app/domain/shared/value-objects/email.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-id.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-owner.value-object.ts`
+  - `src/app/domain/workspace/value-objects/workspace-quota.value-object.ts`
+  - `src/app/domain/membership/value-objects/membership-id.value-object.ts`
+  - `src/app/domain/modules/value-objects/module-id.value-object.ts`
+- **Entities**: `User`, `Organization`, `Bot`, `Team`, `Partner`, `Workspace`, `WorkspaceModule`
+  - `src/app/domain/identity/entities/`
+  - `src/app/domain/membership/entities/`
+  - `src/app/domain/workspace/entities/`
+  - `src/app/domain/modules/entities/`
+- **Aggregate Root**: `WorkspaceAggregate`
+  - `src/app/domain/workspace/aggregates/workspace.aggregate.ts`
+
 ---
 
 ## 📋 目錄
@@ -120,7 +138,7 @@ type AccessSubjectType = 'user' | 'organization' | 'team' | 'partner';
 **重要說明:**
 - **只有以上三種是可登入身份 (Identity)**：User / Organization / Bot
 - **Team / Partner 不是獨立登入身份**，僅是 Organization 下的成員分組視角
-- Account Switcher 允許在 Organization 下切換 Team / Partner 的 **上下文範圍**
+- Identity Switcher (Account Switcher) 允許在 Organization 下切換 Team / Partner 的 **上下文範圍**
 
 ### 2.2 User (個人用戶)
 
@@ -228,7 +246,7 @@ interface Team {
 **限制**:
 - ❌ Team 不能直接創建 Workspace
 - ❌ Team 不能擁有 Workspace
-- ✅ Team 不是登入身份，但可在 Account Switcher 中切換 **Team 上下文**
+- ✅ Team 不是登入身份，但可在 Identity Switcher 中切換 **Team 上下文**
 
 ### 2.5 Partner (夥伴) - 外部協作者分組
 
@@ -291,7 +309,7 @@ interface Partner {
 
 **限制**:
 - ❌ Partner 不能創建 Workspace
-- ✅ Partner 不是登入身份，但可在 Account Switcher 中切換 **Partner 上下文**
+- ✅ Partner 不是登入身份，但可在 Identity Switcher 中切換 **Partner 上下文**
 - ❌ Partner 成員不能邀請其他人加入 Organization
 
 ### 2.6 Bot (服務帳號)
@@ -738,7 +756,7 @@ Acme Corp (Organization)
 
 ## 5. 切換器系統設計
 
-### 5.1 Account Switcher (必備)
+### 5.1 Identity Switcher (Account Switcher, 必備)
 
 **設計目標**:
 - 使用者可在 **User / Organization / Team / Partner** 之間快速切換
@@ -778,12 +796,13 @@ Acme Corp (Organization)
 **切換規則**:
 - **User/Organization**: 直接切換主身份
 - **Team/Partner**: 僅在所屬 Organization 下顯示，切換後保留 Organization 身份
+ - **只能存在一個 Identity Switcher 與一個 Workspace Switcher**
 
 **功能定位**:
-- 在不同帳號身份 (User / Organization) 之間快速切換
-- 統一管理所有可用身份
-- 支援直接創建新組織
-- **當切換到 Organization 身份時**,動態顯示該組織的 Team 和 Partner 管理區塊
+ - 在不同帳號身份 (User / Organization) 之間快速切換
+ - 統一管理所有可用身份
+ - 支援直接創建新組織
+ - **當切換到 Organization 身份時**,動態顯示該組織的 Team 和 Partner 上下文區塊
 
 **位置**: Header 右上角
 
@@ -1100,7 +1119,7 @@ Style:
 - ✅ 可看到透過 Team 指派獲得存取權的 Workspace
 - ✅ 可看到作為 Partner 被授權的 Workspace (標註為外部協作)
 
-**重要**: Team / Partner 不是登入身份，但 Account Switcher 會設定其上下文:
+**重要**: Team / Partner 不是登入身份，但 Identity Switcher 會設定其上下文:
 - ✅ Workspace 列表仍在 Organization 身份下顯示
 - ✅ 依 Team / Partner 上下文篩選可見 Workspace
 
@@ -1246,7 +1265,7 @@ Partner Access (受限)
 **Right Zone**:
 - 通知中心 (🔔) - 顯示未讀數量
 - 設定選單 (⚙️) - 全局設定和偏好
-- Account Switcher - 身份切換器
+- Identity Switcher (Account Switcher) - 身份切換器
 
 ### 6.3 Sidebar 模組導航
 
