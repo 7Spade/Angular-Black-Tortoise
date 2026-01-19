@@ -132,7 +132,7 @@ export const AuthStore = signalStore(
         tap(() => patchState(store, { loading: true, error: null })),
         exhaustMap((email) => repository.sendPasswordReset(email)),
         tapResponse({
-          next: () => patchState(store, { loading: false }),
+          next: () => patchState(store, { loading: false, error: null }),
           error: (error: unknown) =>
             patchState(store, {
               error: toErrorMessage(error),

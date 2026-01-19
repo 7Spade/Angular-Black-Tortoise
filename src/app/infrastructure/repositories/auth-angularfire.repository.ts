@@ -8,7 +8,7 @@ import {
   updateProfile,
   user,
 } from '@angular/fire/auth';
-import { from, map, Observable, throwError } from 'rxjs';
+import { exhaustMap, from, map, Observable, throwError } from 'rxjs';
 import type { User } from '@angular/fire/auth';
 import type {
   AuthCredentials,
@@ -74,8 +74,9 @@ export class AuthAngularFireRepository implements AuthRepository {
         photoURL: update.photoUrl,
       }),
     ).pipe(
+      exhaustMap(() => from(currentUser.reload())),
       map(() => {
-        const updatedUser = this.auth.currentUser;
+        const updatedUser = this.auth.currentUser ?? currentUser;
         if (!updatedUser) {
           throw new Error('No authenticated user.');
         }
