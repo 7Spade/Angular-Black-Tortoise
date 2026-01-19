@@ -10,6 +10,319 @@
 - 所有新增規格必須明確對應 **DDD Boundaries**，避免擴散或混用概念。
 - 任何新增類型或實體必須 **可追溯到 Domain Context**，不得臨時造型別。
 
+## Domain Layer Specification
+
+### Purpose
+This section establishes non-negotiable constraints and requirements for the Domain layer to ensure architectural integrity, maintain pure business logic, and prevent framework coupling.
+
+### Core Principles
+
+**REQ-DOM-001**: Domain layer MUST be pure TypeScript with zero framework dependencies
+- No Angular imports (`@angular/*`)
+- No Firebase imports (`@angular/fire`, `firebase/*`)
+- No RxJS (`rxjs/*`) - use Promises or synchronous returns only
+- No cross-layer imports from `application`, `infrastructure`, or `presentation`
+
+**REQ-DOM-002**: Domain entities MUST enforce single responsibility
+- Each Entity/Value Object/Aggregate represents exactly one business concept
+- No mixing of concerns (e.g., User entity should not contain workspace logic)
+
+**REQ-DOM-003**: Domain objects MUST be immutable by default
+- Value Objects are always immutable
+- Entities use methods that return new instances or use controlled mutation
+- No direct property assignment from outside the class
+
+**CON-DOM-001**: Generics are PROHIBITED in Domain layer
+- Do not use `T`, `K`, `V`, or any generic type parameters in Domain entities, value objects, or aggregates
+- Each domain concept must be explicitly typed
+- Use specific types like `IdentityId`, `WorkspaceId`, `Email` instead of generic wrappers
+
+**CON-DOM-002**: No cross-layer dependencies allowed
+- Domain MUST NOT import from `application/*`
+- Domain MUST NOT import from `infrastructure/*`
+- Domain MUST NOT import from `presentation/*`
+- Domain MAY import from `domain/shared/*` only
+
+**GUD-DOM-001**: Use explicit factory methods for construction
+- Prefer static `create()` methods over constructors for validation
+- Return `Result<T, Error>` or throw domain-specific errors
+- Example: `Email.create(value: string): Result<Email, ValidationError>`
+
+**GUD-DOM-002**: Encapsulate business rules within domain objects
+- Validation logic belongs in Value Objects
+- State transitions belong in Entities
+- Cross-entity rules belong in Domain Services
+- Never expose mutable state directly
+
+**PAT-DOM-001**: Follow DDD tactical patterns strictly
+- **Value Objects**: Immutable, equality by value, no identity
+- **Entities**: Identity-based equality, mutable state controlled by methods
+- **Aggregates**: Consistency boundary, single entry point for modifications
+- **Domain Services**: Stateless operations involving multiple entities
+- **Repository Interfaces**: Define contracts, implementation in infrastructure
+
+### Boundary Enforcement
+
+**SEC-DOM-001**: Domain layer isolation is a security boundary
+- No external data access (database, HTTP, file system)
+- No framework-specific authentication/authorization checks
+- Business rule validation only
+
+**SEC-DOM-002**: All domain inputs MUST be validated
+- Use Value Objects to enforce constraints
+- Throw domain errors for invalid state transitions
+- Never trust data from application or infrastructure layers
+
+### Acceptance Criteria
+
+**AC-DOM-001**: Given a new Domain class, When it is created, Then it MUST NOT import any framework dependencies
+
+**AC-DOM-002**: Given a Domain entity, When inspected, Then it MUST contain only pure TypeScript with no generics
+
+**AC-DOM-003**: Given a Value Object, When created, Then it MUST be immutable and validate its inputs
+
+**AC-DOM-004**: Given any Domain file, When analyzed, Then it MUST NOT reference `application/*`, `infrastructure/*`, or `presentation/*`
+
+**AC-DOM-005**: Given a Domain aggregate, When modified, Then all invariants MUST be enforced before state changes
+
+### File Organization
+
+```
+src/app/domain/
+├── identity/                      # Identity bounded context
+│   ├── value-objects/
+│   │   ├── identity-id.value-object.ts    ✅ Pure TypeScript
+│   │   └── email.value-object.ts          ✅ No generics
+│   ├── entities/
+│   │   ├── user.entity.ts                 ✅ Immutable by design
+│   │   ├── organization.entity.ts         ✅ Single responsibility
+│   │   └── bot.entity.ts
+│   └── identity.repository.interface.ts   ✅ Interface only
+│
+├── workspace/                     # Workspace bounded context
+│   ├── value-objects/
+│   │   ├── workspace-id.value-object.ts
+│   │   ├── workspace-owner.value-object.ts
+│   │   └── workspace-quota.value-object.ts
+│   ├── entities/
+│   │   ├── workspace.entity.ts
+│   │   └── workspace-module.entity.ts
+│   ├── aggregates/
+│   │   └── workspace.aggregate.ts         ✅ Consistency boundary
+│   └── workspace.repository.interface.ts
+│
+├── membership/                    # Membership bounded context
+│   ├── value-objects/
+│   │   └── membership-id.value-object.ts
+│   ├── entities/
+│   │   ├── team.entity.ts
+│   │   └── partner.entity.ts
+│   └── membership.repository.interface.ts
+│
+└── shared/                        # Domain-wide shared concepts
+    ├── value-objects/
+    │   └── timestamp.value-object.ts      ✅ Reusable, pure
+    ├── errors/
+    │   └── domain.error.ts
+    └── types/
+        └── result.type.ts                 ✅ No external deps
+```
+
+### Anti-Patterns to Avoid
+
+**❌ PROHIBITED**: Generic domain wrappers
+```typescript
+// ❌ WRONG - Generic types in domain
+class DomainEntity<T> {
+  constructor(public data: T) {}
+}
+```
+
+**✅ CORRECT**: Explicit domain types
+```typescript
+// ✅ RIGHT - Explicit, named concepts
+class User {
+  private constructor(
+    public readonly id: IdentityId,
+    public readonly email: Email
+  ) {}
+
+  static create(id: string, email: string): Result<User, Error> {
+    // Validation logic
+  }
+}
+```
+
+**❌ PROHIBITED**: Framework coupling
+```typescript
+// ❌ WRONG - Angular/Firebase in domain
+import { inject } from '@angular/core';
+import { Firestore } from '@angular/fire/firestore';
+
+class User {
+  private firestore = inject(Firestore); // NEVER DO THIS
+}
+```
+
+**✅ CORRECT**: Pure business logic
+```typescript
+// ✅ RIGHT - Pure TypeScript
+class User {
+  updateEmail(newEmail: Email): Result<User, Error> {
+    if (!this.canChangeEmail()) {
+      return Result.fail(new EmailChangeNotAllowedError());
+    }
+    return Result.ok(new User(this.id, newEmail));
+  }
+}
+```
+
+**❌ PROHIBITED**: Cross-layer dependencies
+```typescript
+// ❌ WRONG - Domain importing from infrastructure
+import { FirebaseUserRepository } from '@app/infrastructure/firebase';
+
+class User {
+  save() {
+    new FirebaseUserRepository().save(this); // NEVER DO THIS
+  }
+}
+```
+
+**✅ CORRECT**: Repository interface in domain
+```typescript
+// ✅ RIGHT - Interface defined in domain, implemented elsewhere
+export interface UserRepository {
+  save(user: User): Promise<void>;
+  findById(id: IdentityId): Promise<User | null>;
+}
+
+// Implementation lives in infrastructure layer
+```
+
+### Validation Strategy
+
+All domain validation MUST follow these patterns:
+
+1. **Value Object Validation** (Construction time)
+   ```typescript
+   class Email {
+     private constructor(private readonly value: string) {}
+     
+     static create(value: string): Result<Email, ValidationError> {
+       if (!this.isValid(value)) {
+         return Result.fail(new InvalidEmailError(value));
+       }
+       return Result.ok(new Email(value));
+     }
+     
+     private static isValid(value: string): boolean {
+       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+     }
+   }
+   ```
+
+2. **Entity Invariants** (State transition time)
+   ```typescript
+   class Workspace {
+     activate(): Result<Workspace, DomainError> {
+       if (this.isDeleted) {
+         return Result.fail(new CannotActivateDeletedWorkspaceError());
+       }
+       if (this.owner.isDeactivated()) {
+         return Result.fail(new OwnerMustBeActiveError());
+       }
+       return Result.ok(this.withStatus('active'));
+     }
+   }
+   ```
+
+3. **Aggregate Consistency** (Modification time)
+   ```typescript
+   class WorkspaceAggregate {
+     addModule(moduleId: ModuleId): Result<void, DomainError> {
+       if (this.modules.length >= this.quota.maxModules) {
+         return Result.fail(new QuotaExceededError());
+       }
+       // Apply change and emit domain event
+       this.modules.push(moduleId);
+       this.addDomainEvent(new ModuleAddedEvent(this.id, moduleId));
+       return Result.ok();
+     }
+   }
+   ```
+
+### Testing Requirements
+
+**TEST-DOM-001**: All domain logic MUST have unit tests
+- Minimum 90% code coverage for domain layer
+- Test all validation rules and business logic paths
+- Use pure assertions without framework dependencies
+
+**TEST-DOM-002**: Test naming convention
+```typescript
+describe('Email Value Object', () => {
+  describe('create', () => {
+    it('should_CreateValidEmail_When_GivenValidEmailString', () => {
+      // Arrange
+      const validEmail = 'user@example.com';
+      
+      // Act
+      const result = Email.create(validEmail);
+      
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.getValue().toString()).toBe(validEmail);
+    });
+    
+    it('should_FailWithError_When_GivenInvalidEmailFormat', () => {
+      // Arrange
+      const invalidEmail = 'not-an-email';
+      
+      // Act
+      const result = Email.create(invalidEmail);
+      
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidEmailError);
+    });
+  });
+});
+```
+
+### Dependencies
+
+**PLT-DOM-001**: TypeScript 5.0 or higher required
+- Strict mode enabled
+- No implicit any
+- Strict null checks
+
+**INF-DOM-001**: Domain layer has NO external dependencies
+- Only TypeScript standard library
+- No npm packages (except dev dependencies for testing)
+
+### Rationale
+
+This specification exists to:
+
+1. **Preserve Business Logic Purity**: Keep domain logic independent of technical decisions
+2. **Enable True Testability**: Domain can be tested without mocking frameworks
+3. **Support Long-term Maintenance**: Business rules remain clear and changeable
+4. **Prevent Architectural Erosion**: Enforce boundaries that resist degradation over time
+5. **Align with DDD Philosophy**: Domain is the heart of the system, not a data model
+
+### Related Specifications
+
+- [DDD Architecture Instructions](../.github/instructions/ddd-architecture.instructions.md)
+- [.NET Architecture Good Practices](../.github/instructions/dotnet-architecture-good-practices.instructions.md) - Principles apply to TypeScript
+- [M3 Angular Signals Firebase](../.github/instructions/m3-angular-signals-firebase.instructions.md)
+- [Integrated System Specification](./integrated-system-spec.md) - Section 9: Data Model Relationships
+
+---
+
+**This specification is authoritative and MUST be enforced by all development tools, code reviews, and AI assistants.**
+
+
 ### 前置條件 (Domain Artifact 必備)
 在實作本規格前，必須先存在以下 Domain Artifact，且不得以 UI/DTO 取代：
 - **Value Objects**: `IdentityId`, `Email`, `WorkspaceId`, `WorkspaceOwner`, `WorkspaceQuota`, `MembershipId`, `ModuleId`
