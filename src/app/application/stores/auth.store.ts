@@ -77,6 +77,7 @@ export const AuthStore = signalStore(
               user,
               status: 'authenticated',
               loading: false,
+              error: null,
             }),
           error: (error: unknown) =>
             patchState(store, {
@@ -97,6 +98,7 @@ export const AuthStore = signalStore(
               user,
               status: 'authenticated',
               loading: false,
+              error: null,
             }),
           error: (error: unknown) =>
             patchState(store, {
@@ -117,6 +119,7 @@ export const AuthStore = signalStore(
               user: null,
               status: 'unauthenticated',
               loading: false,
+              error: null,
             }),
           error: (error: unknown) =>
             patchState(store, {
@@ -152,6 +155,7 @@ export const AuthStore = signalStore(
               user,
               status: 'authenticated',
               loading: false,
+              error: null,
             }),
           error: (error: unknown) =>
             patchState(store, {
