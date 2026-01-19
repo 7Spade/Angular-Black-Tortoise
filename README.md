@@ -203,6 +203,8 @@ User Action → Method Call → rxMethod → patchState → Signal Update → UI
 6. UI automatically updates
 ```
 
+AuthStore is backed by an AngularFire Auth repository that exposes `authState`, sign-in, sign-up, sign-out, password reset, and profile update flows via observables.
+
 ## 🧪 Testing
 
 ```bash

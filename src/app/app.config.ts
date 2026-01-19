@@ -29,7 +29,12 @@ import { getStorage, provideStorage } from '@angular/fire/storage';
 import { getVertexAI, provideVertexAI } from '@angular/fire/vertexai';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { IDENTITY_REPOSITORY, WORKSPACE_REPOSITORY } from '@application/tokens/repository.tokens';
+import {
+  AUTH_REPOSITORY,
+  IDENTITY_REPOSITORY,
+  WORKSPACE_REPOSITORY,
+} from '@application/tokens/repository.tokens';
+import { AuthAngularFireRepository } from '@infrastructure/repositories/auth-angularfire.repository';
 import { IdentityFirestoreRepository } from '@infrastructure/repositories/identity-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { environment } from '../environments/environment';
@@ -117,6 +122,7 @@ export const appConfig: ApplicationConfig = {
     provideStorage(() => getStorage()),
     provideRemoteConfig(() => getRemoteConfig()),
     provideVertexAI(() => getVertexAI()),
+    { provide: AUTH_REPOSITORY, useClass: AuthAngularFireRepository },
     { provide: IDENTITY_REPOSITORY, useClass: IdentityFirestoreRepository },
     { provide: WORKSPACE_REPOSITORY, useClass: WorkspaceFirestoreRepository },
 
