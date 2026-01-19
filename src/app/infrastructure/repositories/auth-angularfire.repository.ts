@@ -76,7 +76,7 @@ export class AuthAngularFireRepository implements AuthRepository {
     ).pipe(
       exhaustMap(() => from(currentUser.reload())),
       map(() => {
-        const updatedUser = this.auth.currentUser ?? currentUser;
+        const updatedUser = this.auth.currentUser;
         if (!updatedUser) {
           throw new Error('No authenticated user.');
         }
