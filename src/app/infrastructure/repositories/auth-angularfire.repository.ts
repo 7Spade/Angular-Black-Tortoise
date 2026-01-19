@@ -8,6 +8,7 @@ import {
   updateProfile,
   user,
 } from '@angular/fire/auth';
+import { Firestore, doc, serverTimestamp, setDoc } from '@angular/fire/firestore';
 import { exhaustMap, from, map, Observable, throwError } from 'rxjs';
 import type { User } from '@angular/fire/auth';
 import type {
@@ -16,6 +17,7 @@ import type {
   AuthUser,
 } from '@domain/account/entities/auth-user.entity';
 import type { AuthRepository } from '@shared/interfaces/auth-repository.interface';
+import { Collections } from '../collections/collection-names';
 
 /**
  * Map Firebase Auth User to the domain AuthUser shape.
@@ -31,6 +33,7 @@ const toAuthUser = (authUser: User): AuthUser => ({
 @Injectable()
 export class AuthAngularFireRepository implements AuthRepository {
   private readonly auth = inject(Auth);
+  private readonly firestore = inject(Firestore);
 
   authState(): Observable<AuthUser | null> {
     return user(this.auth).pipe(
@@ -55,7 +58,23 @@ export class AuthAngularFireRepository implements AuthRepository {
         credentials.email,
         credentials.password,
       ),
-    ).pipe(map((result) => toAuthUser(result.user)));
+    ).pipe(
+      exhaustMap((result) =>
+        from(
+          setDoc(doc(this.firestore, Collections.users, result.user.uid), {
+            id: result.user.uid,
+            email: result.user.email ?? credentials.email,
+            displayName: result.user.displayName ?? '',
+            photoURL: result.user.photoURL ?? '',
+            createdAt: serverTimestamp(),
+            organizationIds: [],
+            teamIds: [],
+            partnerIds: [],
+            workspaceIds: [],
+          }),
+        ).pipe(map(() => toAuthUser(result.user))),
+      ),
+    );
   }
 
   signOut(): Observable<void> {

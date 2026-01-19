@@ -13,6 +13,9 @@ interface IdentityBase {
 // UserAccount represents a personal identity that can own workspaces.
 export interface UserAccount extends IdentityBase {
   readonly type: 'user';
+  readonly organizationIds: string[];
+  readonly teamIds: string[];
+  readonly partnerIds: string[];
   readonly workspaceIds: string[];
 }
 
@@ -20,6 +23,8 @@ export interface UserAccount extends IdentityBase {
 export interface OrganizationAccount extends IdentityBase {
   readonly type: 'organization';
   readonly memberIds: string[];
+  readonly teamIds: string[];
+  readonly partnerIds: string[];
   readonly workspaceIds: string[];
 }
 
