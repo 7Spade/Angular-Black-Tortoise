@@ -24,17 +24,13 @@ import { MatCardModule } from '@angular/material/card';
   `,
   styles: [
     `
-      :host {
-        --app-header-height: 0px;
-      }
-
       .home-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: calc(100vh - var(--app-header-height));
+        min-height: calc(100vh - var(--app-header-height, 0px));
         padding: 24px;
-        background: var(--mat-sys-surface);
+        background: var(--mat-sys-surface, #fafafa);
       }
 
       .home-card {
