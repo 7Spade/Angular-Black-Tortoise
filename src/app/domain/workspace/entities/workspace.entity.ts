@@ -31,18 +31,4 @@ export class Workspace {
       moduleIds: props.moduleIds ?? [],
     });
   }
-
-  /**
-   * Get owner id for compatibility.
-   */
-  getOwnerId(): string {
-    return this.owner.getOwnerId();
-  }
-
-  /**
-   * Get owner type for compatibility.
-   */
-  getOwnerType(): 'user' | 'organization' {
-    return this.owner.getOwnerType();
-  }
 }

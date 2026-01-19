@@ -30,11 +30,4 @@ export class WorkspaceModule {
   }): WorkspaceModule {
     return new WorkspaceModule(props);
   }
-
-  /**
-   * Get workspace id as string for compatibility.
-   */
-  getWorkspaceIdString(): string {
-    return this.workspaceId.getValue();
-  }
 }
