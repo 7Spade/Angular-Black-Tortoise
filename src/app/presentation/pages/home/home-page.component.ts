@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -35,7 +35,7 @@ import { AuthStore } from '@application/stores/auth.store';
                 autocomplete="email"
                 required
               />
-              @if (emailControl().touched && emailControl().invalid) {
+              @if (emailControl.touched && emailControl.invalid) {
                 <mat-error>Enter a valid email address.</mat-error>
               }
             </mat-form-field>
@@ -49,7 +49,7 @@ import { AuthStore } from '@application/stores/auth.store';
                 autocomplete="current-password"
                 required
               />
-              @if (passwordControl().touched && passwordControl().invalid) {
+              @if (passwordControl.touched && passwordControl.invalid) {
                 <mat-error>Password is required.</mat-error>
               }
             </mat-form-field>
@@ -122,8 +122,8 @@ export class HomePageComponent {
     }),
   });
 
-  readonly emailControl = computed(() => this.form.controls.email);
-  readonly passwordControl = computed(() => this.form.controls.password);
+  readonly emailControl = this.form.controls.email;
+  readonly passwordControl = this.form.controls.password;
 
   onSubmit(): void {
     this.form.markAllAsTouched();
