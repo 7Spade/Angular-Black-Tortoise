@@ -17,6 +17,9 @@ import type {
 } from '@domain/account/entities/auth-user.entity';
 import type { AuthRepository } from '@shared/interfaces/auth-repository.interface';
 
+/**
+ * Map Firebase Auth User to the domain AuthUser shape.
+ */
 const toAuthUser = (authUser: User): AuthUser => ({
   id: authUser.uid,
   email: authUser.email ?? '',
@@ -73,15 +76,6 @@ export class AuthAngularFireRepository implements AuthRepository {
         displayName: update.displayName,
         photoURL: update.photoUrl,
       }),
-    ).pipe(
-      exhaustMap(() => from(currentUser.reload())),
-      map(() => {
-        const updatedUser = this.auth.currentUser;
-        if (!updatedUser) {
-          throw new Error('No authenticated user.');
-        }
-        return toAuthUser(updatedUser);
-      }),
-    );
+    ).pipe(exhaustMap(() => from(currentUser.reload())), map(() => toAuthUser(currentUser)));
   }
 }
