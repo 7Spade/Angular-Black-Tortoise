@@ -14,5 +14,8 @@ export interface WorkspaceRepository {
   delete(id: WorkspaceId): Promise<void>;
   findModules(workspaceId: WorkspaceId): Promise<WorkspaceModule[]>;
   saveModule(module: WorkspaceModule): Promise<void>;
+
+  // Query methods for application layer
+  getWorkspacesByOwner(owner: WorkspaceOwner): Promise<Workspace[]>;
 }
 

@@ -1,5 +1,9 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * MembershipId is a branded identifier for membership entities.
+ * Returns Result<MembershipId, ValidationError> to make validation explicit.
  */
 export class MembershipId {
   private readonly value: string;
@@ -8,11 +12,18 @@ export class MembershipId {
     this.value = value;
   }
 
-  static create(value: string): MembershipId {
+  static create(value: string): Result<MembershipId, ValidationError> {
     if (!value || value.trim().length === 0) {
-      throw new Error('MembershipId cannot be empty');
+      return Result.fail(new ValidationError('MembershipId cannot be empty'));
     }
-    return new MembershipId(value.trim());
+    return Result.ok(new MembershipId(value.trim()));
+  }
+
+  /**
+   * Alias for create() to match repository method naming conventions
+   */
+  static fromString(value: string): Result<MembershipId, ValidationError> {
+    return MembershipId.create(value);
   }
 
   getValue(): string {

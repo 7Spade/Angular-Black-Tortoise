@@ -1,5 +1,9 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * PartnerName is a value object enforcing partner name validation.
+ * Returns Result<PartnerName, ValidationError> to make validation explicit.
  */
 export class PartnerName {
   private readonly value: string;
@@ -8,18 +12,18 @@ export class PartnerName {
     this.value = value;
   }
 
-  static create(value: string): PartnerName {
+  static create(value: string): Result<PartnerName, ValidationError> {
     if (!value || value.trim().length === 0) {
-      throw new Error('Partner name cannot be empty');
+      return Result.fail(new ValidationError('Partner name cannot be empty'));
     }
     const trimmed = value.trim();
     if (trimmed.length < 2) {
-      throw new Error('Partner name must be at least 2 characters');
+      return Result.fail(new ValidationError('Partner name must be at least 2 characters'));
     }
     if (trimmed.length > 100) {
-      throw new Error('Partner name cannot exceed 100 characters');
+      return Result.fail(new ValidationError('Partner name cannot exceed 100 characters'));
     }
-    return new PartnerName(trimmed);
+    return Result.ok(new PartnerName(trimmed));
   }
 
   getValue(): string {

@@ -35,27 +35,29 @@ export class CreateOrganizationCommandHandler {
 
       // Validate organization name
       const nameResult = DisplayName.create(command.name);
-      if (!nameResult.isOk) {
-        return Result.fail(nameResult.error);
+      if (nameResult.isFailure()) {
+        return Result.fail(nameResult.getError());
       }
 
       // Create organization entity
-      const orgId = IdentityId.create();
+      const orgIdResult = IdentityId.create(crypto.randomUUID());
+      if (!orgIdResult.isOk) {
+        return Result.fail(orgIdResult.error);
+      }
 
       const organization = Organization.create({
-        id: orgId,
+        id: orgIdResult.value,
         ownerId: ownerIdResult.value,
-        name: nameResult.value,
+        name: nameResult.getValue(),
         memberIds: [ownerIdResult.value.getValue()], // Owner is automatically a member
         teamIds: [],
         partnerIds: [],
-        workspaceIds: [],
       });
 
       // Save organization
-      await this.repository.saveOrganization?.(organization);
+      await this.repository.saveOrganization(organization);
 
-      return Result.ok(orgId.getValue());
+      return Result.ok(orgIdResult.value.getValue());
     } catch (error) {
       return Result.fail(
         new DomainError(

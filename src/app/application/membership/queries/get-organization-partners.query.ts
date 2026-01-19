@@ -1,6 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import type { MembershipRepository } from '@domain/membership/repositories/membership.repository.interface';
 import type { PartnerDto } from '../dtos/membership.dto';
 
@@ -13,15 +11,13 @@ export class GetOrganizationPartnersQuery {
     'MembershipRepository' as any
   );
 
-  execute(organizationId: string): Observable<PartnerDto[]> {
-    return this.repository.getPartners(organizationId).pipe(
-      map((partners) =>
-        partners.map((partner) => ({
-          id: partner.id.getValue(),
-          organizationId: partner.organizationId.getValue(),
-          memberIds: [...partner.memberIds],
-        }))
-      )
-    );
+  async execute(organizationId: string): Promise<PartnerDto[]> {
+    const partners = await this.repository.getPartners(organizationId);
+    
+    return partners.map((partner) => ({
+      id: partner.id.getValue(),
+      organizationId: partner.organizationId.getValue(),
+      memberIds: [...partner.memberIds],
+    }));
   }
 }

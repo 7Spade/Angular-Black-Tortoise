@@ -1,6 +1,10 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * TeamRole is a value object representing roles within a team.
  * Valid roles: Team Lead, Member
+ * Returns Result<TeamRole, ValidationError> for invalid roles.
  */
 export class TeamRole {
   private readonly value: 'team-lead' | 'member';
@@ -17,15 +21,17 @@ export class TeamRole {
     return new TeamRole('member');
   }
 
-  static fromString(value: string): TeamRole {
+  static fromString(value: string): Result<TeamRole, ValidationError> {
     const normalized = value.toLowerCase().trim();
     if (normalized === 'team-lead' || normalized === 'teamlead' || normalized === 'lead') {
-      return TeamRole.createTeamLead();
+      return Result.ok(TeamRole.createTeamLead());
     }
     if (normalized === 'member') {
-      return TeamRole.createMember();
+      return Result.ok(TeamRole.createMember());
     }
-    throw new Error(`Invalid team role: ${value}. Must be one of: team-lead, member`);
+    return Result.fail(
+      new ValidationError(`Invalid team role: ${value}. Must be one of: team-lead, member`)
+    );
   }
 
   isTeamLead(): boolean {

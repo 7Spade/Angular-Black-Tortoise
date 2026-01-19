@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
 import { User } from '@domain/identity/entities/user.entity';
-import { Email } from '@domain/identity/value-objects/email.value-object';
+import { Email } from '@domain/shared/value-objects/email.value-object';
 import { DisplayName } from '@domain/identity/value-objects/display-name.value-object';
 import { IdentityId } from '@domain/identity/value-objects/identity-id.value-object';
 import { IdentityStatus } from '@domain/identity/value-objects/identity-status.value-object';
+import { Timestamp } from '@domain/shared/value-objects/timestamp.value-object';
 import { Result } from '@domain/shared/types/result.type';
 import { DomainError } from '@domain/shared/errors/domain.error';
 import { ValidationError } from '@domain/shared/errors/validation.error';
@@ -31,20 +31,18 @@ export class CreateUserCommandHandler {
     try {
       // Validate email
       const emailResult = Email.create(command.email);
-      if (!emailResult.isOk) {
-        return Result.fail(emailResult.error);
+      if (emailResult.isFailure()) {
+        return Result.fail(emailResult.getError());
       }
 
       // Validate display name
       const displayNameResult = DisplayName.create(command.displayName);
-      if (!displayNameResult.isOk) {
-        return Result.fail(displayNameResult.error);
+      if (displayNameResult.isFailure()) {
+        return Result.fail(displayNameResult.getError());
       }
 
       // Check if user already exists
-      const existingUser = await firstValueFrom(
-        this.repository.getUserByEmail?.(emailResult.value) ?? Promise.resolve(null) as any
-      );
+      const existingUser = await this.repository.findUserByEmail(emailResult.getValue());
       
       if (existingUser) {
         return Result.fail(
@@ -53,28 +51,34 @@ export class CreateUserCommandHandler {
       }
 
       // Create user entity
-      const userId = IdentityId.create();
-      const status = IdentityStatus.create('active');
+      const userIdResult = IdentityId.create(crypto.randomUUID());
+      if (!userIdResult.isOk) {
+        return Result.fail(userIdResult.error);
+      }
+
+      const statusResult = IdentityStatus.create('active');
       
-      if (!status.isOk) {
-        return Result.fail(status.error);
+      if (statusResult.isFailure()) {
+        return Result.fail(statusResult.getError());
+      }
+
+      const timestampResult = Timestamp.create(new Date());
+      if (!timestampResult.isOk) {
+        return Result.fail(timestampResult.error);
       }
 
       const user = User.create({
-        id: userId,
-        email: emailResult.value,
-        displayName: displayNameResult.value,
-        status: status.value,
-        organizationIds: [],
-        teamIds: [],
-        partnerIds: [],
-        workspaceIds: [],
+        id: userIdResult.value,
+        email: emailResult.getValue(),
+        displayName: displayNameResult.getValue(),
+        status: statusResult.getValue(),
+        createdAt: timestampResult.value,
       });
 
       // Save user
-      await this.repository.saveUser?.(user);
+      await this.repository.saveUser(user);
 
-      return Result.ok(userId.getValue());
+      return Result.ok(userIdResult.value.getValue());
     } catch (error) {
       return Result.fail(
         new DomainError(

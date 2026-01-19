@@ -1,6 +1,10 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * OrganizationRole is a value object representing roles within an organization.
  * Valid roles: Owner, Admin, Member
+ * Returns Result<OrganizationRole, ValidationError> for invalid roles.
  */
 export class OrganizationRole {
   private readonly value: 'owner' | 'admin' | 'member';
@@ -21,18 +25,20 @@ export class OrganizationRole {
     return new OrganizationRole('member');
   }
 
-  static fromString(value: string): OrganizationRole {
+  static fromString(value: string): Result<OrganizationRole, ValidationError> {
     const normalized = value.toLowerCase().trim();
     if (normalized === 'owner') {
-      return OrganizationRole.createOwner();
+      return Result.ok(OrganizationRole.createOwner());
     }
     if (normalized === 'admin') {
-      return OrganizationRole.createAdmin();
+      return Result.ok(OrganizationRole.createAdmin());
     }
     if (normalized === 'member') {
-      return OrganizationRole.createMember();
+      return Result.ok(OrganizationRole.createMember());
     }
-    throw new Error(`Invalid organization role: ${value}. Must be one of: owner, admin, member`);
+    return Result.fail(
+      new ValidationError(`Invalid organization role: ${value}. Must be one of: owner, admin, member`)
+    );
   }
 
   isOwner(): boolean {

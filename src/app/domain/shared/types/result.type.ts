@@ -17,6 +17,20 @@ export class Result<T, E = Error> {
     return new Result<T, E>(undefined, error, false);
   }
 
+  // Property getters for ergonomic access
+  get isOk(): boolean {
+    return this._isSuccess;
+  }
+
+  get value(): T {
+    return this.getValue();
+  }
+
+  get error(): E {
+    return this.getError();
+  }
+
+  // Method API (backward compatibility)
   isSuccess(): boolean {
     return this._isSuccess;
   }

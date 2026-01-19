@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
 import { IdentityId } from '@domain/identity/value-objects/identity-id.value-object';
+import { Organization } from '@domain/identity/entities/organization.entity';
 import { Result } from '@domain/shared/types/result.type';
 import { DomainError } from '@domain/shared/errors/domain.error';
 import { NotFoundError } from '@domain/shared/errors/not-found.error';
@@ -53,7 +53,7 @@ export class AddOrganizationMemberCommandHandler {
         );
       }
 
-      // Find user
+      // Find user (verify exists)
       const user = await this.repository.findUserById?.(userIdResult.value);
 
       if (!user) {
@@ -69,21 +69,14 @@ export class AddOrganizationMemberCommandHandler {
         );
       }
 
-      // Add member to organization
-      const updatedOrganization = Organization.create({
-        ...organization,
-        memberIds: [...organization.memberIds, command.userId],
-      });
+      // Use domain method to add member
+      const addMemberResult = organization.addMember(command.userId);
+      if (!addMemberResult.isOk) {
+        return Result.fail(addMemberResult.error);
+      }
 
-      // Update user's organization list
-      const updatedUser = User.create({
-        ...user,
-        organizationIds: [...user.organizationIds, command.organizationId],
-      });
-
-      // Save both entities
-      await this.repository.saveOrganization?.(updatedOrganization);
-      await this.repository.saveUser?.(updatedUser);
+      // Save organization with new member
+      await this.repository.saveOrganization?.(organization);
 
       return Result.ok(undefined);
     } catch (error) {

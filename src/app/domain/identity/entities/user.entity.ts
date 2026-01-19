@@ -1,5 +1,5 @@
 import type { IdentityId } from '../value-objects/identity-id.value-object';
-import type { Email } from '../value-objects/email.value-object';
+import type { Email } from '../../shared/value-objects/email.value-object';
 import type { DisplayName } from '../value-objects/display-name.value-object';
 import type { IdentityStatus } from '../value-objects/identity-status.value-object';
 import type { Timestamp } from '../../shared/value-objects/timestamp.value-object';

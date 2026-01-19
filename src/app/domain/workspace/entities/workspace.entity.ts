@@ -1,6 +1,6 @@
 import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
 import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-object';
-import type { WorkspaceStatus } from '../value-objects/workspace-status.value-object';
+import { WorkspaceStatus } from '../value-objects/workspace-status.value-object';
 import type { WorkspaceQuota } from '../value-objects/workspace-quota.value-object';
 import type { DisplayName } from '../../identity/value-objects/display-name.value-object';
 import type { Timestamp } from '../../shared/value-objects/timestamp.value-object';

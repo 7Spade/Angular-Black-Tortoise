@@ -1,5 +1,9 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * IdentityId is a branded identifier for identity entities.
+ * Returns Result<IdentityId, ValidationError> to make validation explicit.
  */
 export class IdentityId {
   private readonly value: string;
@@ -8,11 +12,18 @@ export class IdentityId {
     this.value = value;
   }
 
-  static create(value: string): IdentityId {
+  static create(value: string): Result<IdentityId, ValidationError> {
     if (!value || value.trim().length === 0) {
-      throw new Error('IdentityId cannot be empty');
+      return Result.fail(new ValidationError('IdentityId cannot be empty'));
     }
-    return new IdentityId(value.trim());
+    return Result.ok(new IdentityId(value.trim()));
+  }
+
+  /**
+   * Alias for create() to match repository method naming conventions
+   */
+  static fromString(value: string): Result<IdentityId, ValidationError> {
+    return IdentityId.create(value);
   }
 
   getValue(): string {

@@ -1,6 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import type { IdentityRepository } from '@domain/identity/repositories/identity.repository.interface';
 import type { OrganizationDto } from '../dtos/identity.dto';
 
@@ -13,24 +11,22 @@ export class GetUserOrganizationsQuery {
     'IdentityRepository' as any
   );
 
-  execute(userId: string): Observable<OrganizationDto[]> {
-    return this.repository.getOrganizations().pipe(
-      map((organizations) =>
-        organizations
-          .filter(
-            (org) =>
-              org.ownerId === userId || org.memberIds.includes(userId)
-          )
-          .map((org) => ({
-            id: org.id.getValue(),
-            type: org.type,
-            ownerId: org.ownerId,
-            memberIds: [...org.memberIds],
-            teamIds: [...org.teamIds],
-            partnerIds: [...org.partnerIds],
-            workspaceIds: [...org.workspaceIds],
-          }))
+  async execute(userId: string): Promise<OrganizationDto[]> {
+    const organizations = await this.repository.getOrganizations();
+    
+    return organizations
+      .filter(
+        (org) =>
+          org.ownerId === userId || org.memberIds.includes(userId)
       )
-    );
+      .map((org) => ({
+        id: org.id.getValue(),
+        type: org.type,
+        ownerId: org.ownerId,
+        memberIds: [...org.memberIds],
+        teamIds: [...org.teamIds],
+        partnerIds: [...org.partnerIds],
+        workspaceIds: [...org.workspaceIds],
+      }));
   }
 }

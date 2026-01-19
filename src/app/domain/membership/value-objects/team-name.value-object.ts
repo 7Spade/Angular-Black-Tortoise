@@ -1,5 +1,9 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * TeamName is a value object enforcing team name validation.
+ * Returns Result<TeamName, ValidationError> to make validation explicit.
  */
 export class TeamName {
   private readonly value: string;
@@ -8,18 +12,18 @@ export class TeamName {
     this.value = value;
   }
 
-  static create(value: string): TeamName {
+  static create(value: string): Result<TeamName, ValidationError> {
     if (!value || value.trim().length === 0) {
-      throw new Error('Team name cannot be empty');
+      return Result.fail(new ValidationError('Team name cannot be empty'));
     }
     const trimmed = value.trim();
     if (trimmed.length < 2) {
-      throw new Error('Team name must be at least 2 characters');
+      return Result.fail(new ValidationError('Team name must be at least 2 characters'));
     }
     if (trimmed.length > 100) {
-      throw new Error('Team name cannot exceed 100 characters');
+      return Result.fail(new ValidationError('Team name cannot exceed 100 characters'));
     }
-    return new TeamName(trimmed);
+    return Result.ok(new TeamName(trimmed));
   }
 
   getValue(): string {

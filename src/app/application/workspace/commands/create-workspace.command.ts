@@ -65,10 +65,13 @@ export class CreateWorkspaceCommandHandler {
       }
 
       // Create workspace entity
-      const workspaceId = WorkspaceId.create();
+      const workspaceIdResult = WorkspaceId.create();
+      if (!workspaceIdResult.isOk) {
+        return Result.fail(workspaceIdResult.error);
+      }
 
       const workspace = Workspace.create({
-        id: workspaceId,
+        id: workspaceIdResult.value,
         owner: ownerResult.value,
         name: nameResult.value,
         status: statusResult.value,
@@ -80,7 +83,7 @@ export class CreateWorkspaceCommandHandler {
       // Save workspace
       await this.repository.save?.(workspace);
 
-      return Result.ok(workspaceId.getValue());
+      return Result.ok(workspaceIdResult.value.getValue());
     } catch (error) {
       return Result.fail(
         new DomainError(

@@ -1,6 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import type { MembershipRepository } from '@domain/membership/repositories/membership.repository.interface';
 import type { TeamDto } from '../dtos/membership.dto';
 
@@ -13,15 +11,13 @@ export class GetOrganizationTeamsQuery {
     'MembershipRepository' as any
   );
 
-  execute(organizationId: string): Observable<TeamDto[]> {
-    return this.repository.getTeams(organizationId).pipe(
-      map((teams) =>
-        teams.map((team) => ({
-          id: team.id.getValue(),
-          organizationId: team.organizationId.getValue(),
-          memberIds: [...team.memberIds],
-        }))
-      )
-    );
+  async execute(organizationId: string): Promise<TeamDto[]> {
+    const teams = await this.repository.getTeams(organizationId);
+    
+    return teams.map((team) => ({
+      id: team.id.getValue(),
+      organizationId: team.organizationId.getValue(),
+      memberIds: [...team.memberIds],
+    }));
   }
 }

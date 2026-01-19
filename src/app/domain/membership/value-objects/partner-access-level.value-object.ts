@@ -1,6 +1,10 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * PartnerAccessLevel is a value object representing access levels for partners.
  * Valid levels: Limited, Standard, Full
+ * Returns Result<PartnerAccessLevel, ValidationError> for invalid levels.
  */
 export class PartnerAccessLevel {
   private readonly value: 'limited' | 'standard' | 'full';
@@ -21,18 +25,20 @@ export class PartnerAccessLevel {
     return new PartnerAccessLevel('full');
   }
 
-  static fromString(value: string): PartnerAccessLevel {
+  static fromString(value: string): Result<PartnerAccessLevel, ValidationError> {
     const normalized = value.toLowerCase().trim();
     if (normalized === 'limited') {
-      return PartnerAccessLevel.createLimited();
+      return Result.ok(PartnerAccessLevel.createLimited());
     }
     if (normalized === 'standard') {
-      return PartnerAccessLevel.createStandard();
+      return Result.ok(PartnerAccessLevel.createStandard());
     }
     if (normalized === 'full') {
-      return PartnerAccessLevel.createFull();
+      return Result.ok(PartnerAccessLevel.createFull());
     }
-    throw new Error(`Invalid partner access level: ${value}. Must be one of: limited, standard, full`);
+    return Result.fail(
+      new ValidationError(`Invalid partner access level: ${value}. Must be one of: limited, standard, full`)
+    );
   }
 
   isLimited(): boolean {
