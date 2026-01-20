@@ -13,17 +13,17 @@
   @if (users().length > 0) {
     <div class="menu-section">
       <div class="section-header">Personal</div>
-      @for (user of users(); track user.id.value) {
+      @for (user of users(); track user.id.getValue()) {
         <button
           mat-menu-item
-          (click)="selectUser(user.id.value, user.displayName)"
+          (click)="selectUser(user.id.getValue(), user.displayName.getValue())"
           [class.active]="
             activeOwner()?.ownerType === 'user' &&
-            activeOwner()?.ownerId === user.id.value
+            activeOwner()?.ownerId === user.id.getValue()
           "
         >
           <mat-icon>person</mat-icon>
-          <span>{{ user.displayName }}</span>
+          <span>{{ user.displayName.getValue() }}</span>
         </button>
       }
     </div>
@@ -34,61 +34,17 @@
     <mat-divider></mat-divider>
     <div class="menu-section">
       <div class="section-header">Organizations</div>
-      @for (org of organizations(); track org.id.value) {
+      @for (org of organizations(); track org.id.getValue()) {
         <button
           mat-menu-item
-          (click)="selectOrganization(org.id.value, org.name)"
+          (click)="selectOrganization(org.id.getValue(), org.name.getValue())"
           [class.active]="
             activeOwner()?.ownerType === 'organization' &&
-            activeOwner()?.ownerId === org.id.value
+            activeOwner()?.ownerId === org.id.getValue()
           "
         >
           <mat-icon>business</mat-icon>
-          <span>{{ org.name }}</span>
-        </button>
-      }
-    </div>
-  }
-
-  <!-- Teams Section (shown when an organization is selected) -->
-  @if (teams().length > 0) {
-    <mat-divider></mat-divider>
-    <div class="menu-section">
-      <div class="section-header">Teams</div>
-      @for (team of teams(); track team.id.value) {
-        <button
-          mat-menu-item
-          (click)="selectTeam(team.id.value, team.name)"
-          [class.active]="
-            activeOwner()?.ownerType === 'team' &&
-            activeOwner()?.ownerId === team.id.value
-          "
-          class="sub-item"
-        >
-          <mat-icon>groups</mat-icon>
-          <span>{{ team.name }}</span>
-        </button>
-      }
-    </div>
-  }
-
-  <!-- Partners Section (shown when an organization is selected) -->
-  @if (partners().length > 0) {
-    <mat-divider></mat-divider>
-    <div class="menu-section">
-      <div class="section-header">Partners</div>
-      @for (partner of partners(); track partner.id.value) {
-        <button
-          mat-menu-item
-          (click)="selectPartner(partner.id.value, partner.name)"
-          [class.active]="
-            activeOwner()?.ownerType === 'partner' &&
-            activeOwner()?.ownerId === partner.id.value
-          "
-          class="sub-item"
-        >
-          <mat-icon>handshake</mat-icon>
-          <span>{{ partner.name }}</span>
+          <span>{{ org.name.getValue() }}</span>
         </button>
       }
     </div>
@@ -96,9 +52,7 @@
 
   @if (
     users().length === 0 &&
-    organizations().length === 0 &&
-    teams().length === 0 &&
-    partners().length === 0
+    organizations().length === 0
   ) {
     <div class="empty-state">
       <mat-icon>info</mat-icon>

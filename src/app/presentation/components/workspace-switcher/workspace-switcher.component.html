@@ -9,10 +9,10 @@
       <!-- Owned Workspaces -->
       @if (getGroupedWorkspaces().owned.length > 0) {
         <mat-optgroup label="Owned">
-          @for (workspace of getGroupedWorkspaces().owned; track workspace.id.value) {
-            <mat-option [value]="workspace.id.value">
+          @for (workspace of getGroupedWorkspaces().owned; track workspace.id.getValue()) {
+            <mat-option [value]="workspace.id.getValue()">
               <div class="workspace-option">
-                <span class="workspace-name">{{ workspace.name }}</span>
+                <span class="workspace-name">{{ workspace.name.getValue() }}</span>
                 <mat-chip
                   [color]="getStatusColor(workspace.status)"
                   class="status-badge"
@@ -28,10 +28,10 @@
       <!-- Member Workspaces -->
       @if (getGroupedWorkspaces().member.length > 0) {
         <mat-optgroup label="Member">
-          @for (workspace of getGroupedWorkspaces().member; track workspace.id.value) {
-            <mat-option [value]="workspace.id.value">
+          @for (workspace of getGroupedWorkspaces().member; track workspace.id.getValue()) {
+            <mat-option [value]="workspace.id.getValue()">
               <div class="workspace-option">
-                <span class="workspace-name">{{ workspace.name }}</span>
+                <span class="workspace-name">{{ workspace.name.getValue() }}</span>
                 <mat-chip
                   [color]="getStatusColor(workspace.status)"
                   class="status-badge"
@@ -47,10 +47,10 @@
       <!-- Team Workspaces -->
       @if (getGroupedWorkspaces().team.length > 0) {
         <mat-optgroup label="Team">
-          @for (workspace of getGroupedWorkspaces().team; track workspace.id.value) {
-            <mat-option [value]="workspace.id.value">
+          @for (workspace of getGroupedWorkspaces().team; track workspace.id.getValue()) {
+            <mat-option [value]="workspace.id.getValue()">
               <div class="workspace-option">
-                <span class="workspace-name">{{ workspace.name }}</span>
+                <span class="workspace-name">{{ workspace.name.getValue() }}</span>
                 <mat-chip
                   [color]="getStatusColor(workspace.status)"
                   class="status-badge"
@@ -66,10 +66,10 @@
       <!-- Partner Workspaces -->
       @if (getGroupedWorkspaces().partner.length > 0) {
         <mat-optgroup label="Partner">
-          @for (workspace of getGroupedWorkspaces().partner; track workspace.id.value) {
-            <mat-option [value]="workspace.id.value">
+          @for (workspace of getGroupedWorkspaces().partner; track workspace.id.getValue()) {
+            <mat-option [value]="workspace.id.getValue()">
               <div class="workspace-option">
-                <span class="workspace-name">{{ workspace.name }}</span>
+                <span class="workspace-name">{{ workspace.name.getValue() }}</span>
                 <mat-chip
                   [color]="getStatusColor(workspace.status)"
                   class="status-badge"

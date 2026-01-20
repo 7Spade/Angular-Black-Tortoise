@@ -14,21 +14,33 @@ export class AuthUser {
   readonly id: IdentityId;
   readonly email: Email;
   readonly emailVerified: boolean;
+  readonly displayName?: string;
+  readonly photoURL?: string;
 
   private constructor(props: {
     id: IdentityId;
     email: Email;
     emailVerified: boolean;
+    displayName?: string;
+    photoURL?: string;
   }) {
     this.id = props.id;
     this.email = props.email;
     this.emailVerified = props.emailVerified;
+    if (props.displayName !== undefined) {
+      this.displayName = props.displayName;
+    }
+    if (props.photoURL !== undefined) {
+      this.photoURL = props.photoURL;
+    }
   }
 
   static create(props: {
     id: IdentityId;
     email: Email;
     emailVerified: boolean;
+    displayName?: string;
+    photoURL?: string;
   }): AuthUser {
     return new AuthUser(props);
   }
@@ -38,6 +50,20 @@ export class AuthUser {
    */
   isEmailVerified(): boolean {
     return this.emailVerified;
+  }
+
+  /**
+   * Get display name or email as fallback
+   */
+  getDisplayName(): string {
+    return this.displayName || this.email.getValue();
+  }
+
+  /**
+   * Check if user has a profile photo
+   */
+  hasProfilePhoto(): boolean {
+    return !!this.photoURL;
   }
 }
 
