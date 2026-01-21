@@ -1,45 +1,43 @@
+import { Injectable, inject, signal } from '@angular/core';
 import {
   SettingsDemoUseCase,
-  SettingsDemoState,
   SettingsUpdateInput,
   SettingsResetInput,
 } from '@application/use-cases/demo/settings-demo.use-case';
 
+@Injectable({ providedIn: 'root' })
 export class SettingsDemoFacade {
-  private state: SettingsDemoState = {
-    workspaceId: null,
-    themePreference: 'system',
-    locale: null,
-    loading: false,
-  };
+  private readonly useCase = inject(SettingsDemoUseCase);
 
-  constructor(private readonly useCase: SettingsDemoUseCase) {}
-
-  workspaceId(): string | null {
-    return this.state.workspaceId;
-  }
-
-  themePreference(): 'system' | 'light' | 'dark' {
-    return this.state.themePreference;
-  }
-
-  locale(): string | null {
-    return this.state.locale;
-  }
-
-  loading(): boolean {
-    return this.state.loading;
-  }
+  readonly workspaceId = signal<string | null>(null);
+  readonly themePreference = signal<'system' | 'light' | 'dark'>('system');
+  readonly locale = signal<string | null>(null);
+  readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.state = await this.useCase.loadState();
+    this.loading.set(true);
+    const state = await this.useCase.loadState();
+    this.workspaceId.set(state.workspaceId);
+    this.themePreference.set(state.themePreference);
+    this.locale.set(state.locale);
+    this.loading.set(false);
   }
 
   async updateSettings(input: SettingsUpdateInput): Promise<void> {
-    this.state = await this.useCase.updateSettings(input);
+    this.loading.set(true);
+    const state = await this.useCase.updateSettings(input);
+    this.workspaceId.set(state.workspaceId);
+    this.themePreference.set(state.themePreference);
+    this.locale.set(state.locale);
+    this.loading.set(false);
   }
 
   async resetSettings(input: SettingsResetInput): Promise<void> {
-    this.state = await this.useCase.resetSettings(input);
+    this.loading.set(true);
+    const state = await this.useCase.resetSettings(input);
+    this.workspaceId.set(state.workspaceId);
+    this.themePreference.set(state.themePreference);
+    this.locale.set(state.locale);
+    this.loading.set(false);
   }
 }

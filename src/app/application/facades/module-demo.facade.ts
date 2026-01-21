@@ -1,45 +1,43 @@
+import { Injectable, inject, signal } from '@angular/core';
 import {
   ModuleDemoUseCase,
-  ModuleDemoState,
   ModuleSelectionInput,
   ModuleRefreshInput,
 } from '@application/use-cases/demo/module-demo.use-case';
 
+@Injectable({ providedIn: 'root' })
 export class ModuleDemoFacade {
-  private state: ModuleDemoState = {
-    workspaceId: null,
-    moduleKeys: [],
-    activeModuleKey: null,
-    loading: false,
-  };
+  private readonly useCase = inject(ModuleDemoUseCase);
 
-  constructor(private readonly useCase: ModuleDemoUseCase) {}
-
-  workspaceId(): string | null {
-    return this.state.workspaceId;
-  }
-
-  moduleKeys(): ReadonlyArray<string> {
-    return this.state.moduleKeys;
-  }
-
-  activeModuleKey(): string | null {
-    return this.state.activeModuleKey;
-  }
-
-  loading(): boolean {
-    return this.state.loading;
-  }
+  readonly workspaceId = signal<string | null>(null);
+  readonly moduleKeys = signal<ReadonlyArray<string>>([]);
+  readonly activeModuleKey = signal<string | null>(null);
+  readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.state = await this.useCase.loadState();
+    this.loading.set(true);
+    const state = await this.useCase.loadState();
+    this.workspaceId.set(state.workspaceId);
+    this.moduleKeys.set(state.moduleKeys);
+    this.activeModuleKey.set(state.activeModuleKey);
+    this.loading.set(false);
   }
 
   async selectModule(input: ModuleSelectionInput): Promise<void> {
-    this.state = await this.useCase.selectModule(input);
+    this.loading.set(true);
+    const state = await this.useCase.selectModule(input);
+    this.workspaceId.set(state.workspaceId);
+    this.moduleKeys.set(state.moduleKeys);
+    this.activeModuleKey.set(state.activeModuleKey);
+    this.loading.set(false);
   }
 
   async refreshModules(input: ModuleRefreshInput): Promise<void> {
-    this.state = await this.useCase.refreshModules(input);
+    this.loading.set(true);
+    const state = await this.useCase.refreshModules(input);
+    this.workspaceId.set(state.workspaceId);
+    this.moduleKeys.set(state.moduleKeys);
+    this.activeModuleKey.set(state.activeModuleKey);
+    this.loading.set(false);
   }
 }

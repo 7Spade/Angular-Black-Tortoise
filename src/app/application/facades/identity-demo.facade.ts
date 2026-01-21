@@ -1,38 +1,33 @@
+import { Injectable, inject, signal } from '@angular/core';
 import {
   IdentityDemoUseCase,
   IdentitySelectionInput,
   IdentityAccessCheckInput,
-  IdentityDemoState,
   IdentityAccessResult,
 } from '@application/use-cases/demo/identity-demo.use-case';
 
+@Injectable({ providedIn: 'root' })
 export class IdentityDemoFacade {
-  private state: IdentityDemoState = {
-    currentIdentityId: null,
-    identityType: null,
-    loading: false,
-  };
+  private readonly useCase = inject(IdentityDemoUseCase);
 
-  constructor(private readonly useCase: IdentityDemoUseCase) {}
-
-  currentIdentityId(): string | null {
-    return this.state.currentIdentityId;
-  }
-
-  identityType(): 'user' | 'organization' | 'bot' | null {
-    return this.state.identityType;
-  }
-
-  loading(): boolean {
-    return this.state.loading;
-  }
+  readonly currentIdentityId = signal<string | null>(null);
+  readonly identityType = signal<'user' | 'organization' | 'bot' | null>(null);
+  readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.state = await this.useCase.loadState();
+    this.loading.set(true);
+    const state = await this.useCase.loadState();
+    this.currentIdentityId.set(state.currentIdentityId);
+    this.identityType.set(state.identityType);
+    this.loading.set(false);
   }
 
   async selectIdentity(input: IdentitySelectionInput): Promise<void> {
-    this.state = await this.useCase.selectIdentity(input);
+    this.loading.set(true);
+    const state = await this.useCase.selectIdentity(input);
+    this.currentIdentityId.set(state.currentIdentityId);
+    this.identityType.set(state.identityType);
+    this.loading.set(false);
   }
 
   async checkAccess(
