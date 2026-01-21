@@ -3,3 +3,7 @@ export * from './value-objects';
 export * from './enums';
 export * from './aggregates';
 export * from './repositories';
+export * from './events';
+export * from './factories';
+export * from './specifications';
+export * from './services';
