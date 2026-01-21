@@ -2,6 +2,7 @@ import { computed, inject, Injectable } from '@angular/core';
 import { WorkspaceStore } from '@application/stores/workspace.store';
 import { CreateWorkspaceUseCase } from '@application/use-cases/workspace/create-workspace.use-case';
 import { ListWorkspacesUseCase } from '@application/use-cases/workspace/list-workspaces.use-case';
+import { DomainEventPublisher } from '@application/services';
 
 /**
  * Workspace Facade - Unified API for workspace operations.
@@ -11,11 +12,13 @@ import { ListWorkspacesUseCase } from '@application/use-cases/workspace/list-wor
  * - Coordinates between stores and use cases
  * - Handles complex workflows that span multiple use cases
  * - Exposes reactive signals for UI consumption
+ * - Publishes domain events after successful operations
  * 
  * DDD Compliance:
  * - Facades belong to Application layer
  * - They delegate to use cases for commands
  * - They expose store signals for queries
+ * - They publish domain events after persistence
  * - UI components should ONLY interact via facades (not directly with stores/use cases)
  * 
  * Signals Architecture:
@@ -28,6 +31,7 @@ export class WorkspaceFacade {
   private readonly workspaceStore = inject(WorkspaceStore);
   private readonly createWorkspaceUseCase = inject(CreateWorkspaceUseCase);
   private readonly listWorkspacesUseCase = inject(ListWorkspacesUseCase);
+  private readonly eventPublisher = inject(DomainEventPublisher);
 
   // State signals from store
   readonly workspaces = this.workspaceStore.workspaces;
@@ -53,6 +57,9 @@ export class WorkspaceFacade {
         ownerId,
         ownerType,
       });
+
+      // Publish domain events
+      this.eventPublisher.publishAll(result.events);
 
       // Reload workspaces to include the new one
       this.workspaceStore.setActiveOwner(ownerType, ownerId);
