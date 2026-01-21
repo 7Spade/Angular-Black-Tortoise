@@ -1,45 +1,42 @@
-import {
-  ModuleDemoUseCase,
-  ModuleDemoState,
-  ModuleSelectionInput,
-  ModuleRefreshInput,
-} from '@application/use-cases/demo/module-demo.use-case';
+import { Injectable, signal } from '@angular/core';
 
+/**
+ * Simplified demo facade - no overengineered use-case layer.
+ * Previously had a use-case that just returned mock objects with no I/O, async, or cross-aggregate logic.
+ * Now: direct signal state management for demo purposes.
+ */
+@Injectable({ providedIn: 'root' })
 export class ModuleDemoFacade {
-  private state: ModuleDemoState = {
-    workspaceId: null,
-    moduleKeys: [],
-    activeModuleKey: null,
-    loading: false,
-  };
-
-  constructor(private readonly useCase: ModuleDemoUseCase) {}
-
-  workspaceId(): string | null {
-    return this.state.workspaceId;
-  }
-
-  moduleKeys(): ReadonlyArray<string> {
-    return this.state.moduleKeys;
-  }
-
-  activeModuleKey(): string | null {
-    return this.state.activeModuleKey;
-  }
-
-  loading(): boolean {
-    return this.state.loading;
-  }
+  readonly workspaceId = signal<string | null>(null);
+  readonly moduleKeys = signal<ReadonlyArray<string>>([]);
+  readonly activeModuleKey = signal<string | null>(null);
+  readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.state = await this.useCase.loadState();
+    // Demo initialization - no real I/O
+    this.workspaceId.set(null);
+    this.moduleKeys.set([]);
+    this.activeModuleKey.set(null);
+    this.loading.set(false);
   }
 
-  async selectModule(input: ModuleSelectionInput): Promise<void> {
-    this.state = await this.useCase.selectModule(input);
+  async selectModule(input: {
+    workspaceId: string;
+    moduleKey: string;
+  }): Promise<void> {
+    // Demo selection - would connect to real ModuleStore in production
+    this.loading.set(true);
+    this.workspaceId.set(input.workspaceId);
+    this.activeModuleKey.set(input.moduleKey);
+    this.loading.set(false);
   }
 
-  async refreshModules(input: ModuleRefreshInput): Promise<void> {
-    this.state = await this.useCase.refreshModules(input);
+  async refreshModules(input: { workspaceId: string }): Promise<void> {
+    // Demo refresh - would call real repository in production
+    this.loading.set(true);
+    this.workspaceId.set(input.workspaceId);
+    this.moduleKeys.set([]);
+    this.activeModuleKey.set(null);
+    this.loading.set(false);
   }
 }

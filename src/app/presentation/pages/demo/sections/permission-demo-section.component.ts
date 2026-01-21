@@ -38,12 +38,12 @@ import { PermissionDemoFacade } from '@application/facades/permission-demo.facad
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Action</mat-label>
-            <mat-select [value]="action() ?? ''" (selectionChange)="onActionSelect($event.value)">
-              <mat-option value="read">read</mat-option>
-              <mat-option value="write">write</mat-option>
-              <mat-option value="admin">admin</mat-option>
-            </mat-select>
+            <mat-label>Permission</mat-label>
+            <input matInput [value]="permission()" (input)="onPermissionInput($any($event.target).value)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Identity ID</mat-label>
+            <input matInput [value]="identityId()" (input)="onIdentityIdInput($any($event.target).value)" />
           </mat-form-field>
         </div>
         <p class="demo-meta">Scope: {{ scopeSummary() }}</p>
@@ -80,7 +80,9 @@ export class PermissionDemoSectionComponent {
 
   readonly workspaceId = signal('');
   readonly scope = signal<'workspace' | 'module' | 'entity' | null>(null);
-  readonly action = signal<'read' | 'write' | 'admin' | null>(null);
+  readonly permission = signal('');
+  readonly identityId = signal('');
+  
   scopeSummary(): string {
     const workspace = this.workspaceId().trim();
     const scope = this.scope();
@@ -95,8 +97,12 @@ export class PermissionDemoSectionComponent {
     this.scope.set(value);
   }
 
-  onActionSelect(value: 'read' | 'write' | 'admin'): void {
-    this.action.set(value);
+  onPermissionInput(value: string): void {
+    this.permission.set(value);
+  }
+
+  onIdentityIdInput(value: string): void {
+    this.identityId.set(value);
   }
 
   async onInitialize(): Promise<void> {
@@ -113,11 +119,12 @@ export class PermissionDemoSectionComponent {
   }
 
   async onEvaluate(): Promise<void> {
-    const workspaceId = this.workspaceId().trim();
-    const action = this.action();
-    if (!workspaceId || !action) {
+    const permission = this.permission().trim();
+    const identityId = this.identityId().trim();
+    if (!permission || !identityId) {
       return;
     }
-    await this.facade.evaluatePermission({ workspaceId, action });
+    const result = await this.facade.evaluatePermission({ permission, identityId });
+    console.log('Permission evaluation:', result);
   }
 }

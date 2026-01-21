@@ -1,43 +1,39 @@
-import {
-  IdentityDemoUseCase,
-  IdentitySelectionInput,
-  IdentityAccessCheckInput,
-  IdentityDemoState,
-  IdentityAccessResult,
-} from '@application/use-cases/demo/identity-demo.use-case';
+import { Injectable, signal } from '@angular/core';
 
+/**
+ * Simplified demo facade - no overengineered use-case layer.
+ * Previously had a use-case that just returned mock objects with no I/O, async, or cross-aggregate logic.
+ * Now: direct signal state management for demo purposes.
+ */
+@Injectable({ providedIn: 'root' })
 export class IdentityDemoFacade {
-  private state: IdentityDemoState = {
-    currentIdentityId: null,
-    identityType: null,
-    loading: false,
-  };
-
-  constructor(private readonly useCase: IdentityDemoUseCase) {}
-
-  currentIdentityId(): string | null {
-    return this.state.currentIdentityId;
-  }
-
-  identityType(): 'user' | 'organization' | 'bot' | null {
-    return this.state.identityType;
-  }
-
-  loading(): boolean {
-    return this.state.loading;
-  }
+  readonly currentIdentityId = signal<string | null>(null);
+  readonly identityType = signal<'user' | 'organization' | 'bot' | null>(null);
+  readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.state = await this.useCase.loadState();
+    // Demo initialization - no real I/O
+    this.currentIdentityId.set(null);
+    this.identityType.set(null);
+    this.loading.set(false);
   }
 
-  async selectIdentity(input: IdentitySelectionInput): Promise<void> {
-    this.state = await this.useCase.selectIdentity(input);
+  async selectIdentity(input: {
+    identityId: string;
+    identityType: 'user' | 'organization' | 'bot';
+  }): Promise<void> {
+    // Demo selection - would connect to real IdentityStore in production
+    this.loading.set(true);
+    this.currentIdentityId.set(input.identityId);
+    this.identityType.set(input.identityType);
+    this.loading.set(false);
   }
 
-  async checkAccess(
-    input: IdentityAccessCheckInput,
-  ): Promise<IdentityAccessResult> {
-    return this.useCase.checkAccess(input);
+  async checkAccess(input: {
+    identityId: string;
+    capability: 'read' | 'write' | 'admin';
+  }): Promise<{ allowed: boolean }> {
+    // Demo access check - trivial logic, no real permission system
+    return { allowed: input.identityId.trim().length > 0 };
   }
 }
