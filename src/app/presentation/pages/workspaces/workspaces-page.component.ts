@@ -98,7 +98,7 @@ import { AuthStore } from '@application/stores/auth.store';
                 <mat-icon mat-card-avatar>folder</mat-icon>
                 <mat-card-title>Workspace {{ workspace.id.getValue().slice(0, 8) }}</mat-card-title>
                 <mat-card-subtitle>
-                  Owner: {{ workspace.owner.type }} ({{ workspace.owner.id }})
+                  Owner: {{ workspace.owner.type }} ({{ workspace.owner.getIdValue() }})
                 </mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>

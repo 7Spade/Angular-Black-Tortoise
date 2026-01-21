@@ -4,6 +4,11 @@ import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 
 /**
  * WorkspaceOwner encapsulates workspace ownership information with typed IDs.
+ * 
+ * DDD Compliance:
+ * - Value Object with immutable properties
+ * - Structural equality via equals() method
+ * - Type-safe ID access methods
  */
 export class WorkspaceOwner {
   private readonly userId: UserId | null;
@@ -53,6 +58,17 @@ export class WorkspaceOwner {
       throw new Error('WorkspaceOwner is not organization-owned');
     }
     return this.organizationId;
+  }
+
+  /**
+   * Get the ID value as a string, regardless of owner type.
+   * This is useful for display purposes while maintaining type safety internally.
+   */
+  getIdValue(): string {
+    if (this.type === 'user') {
+      return this.userId!.getValue();
+    }
+    return this.organizationId!.getValue();
   }
 
   equals(other: WorkspaceOwner): boolean {
