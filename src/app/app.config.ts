@@ -44,7 +44,6 @@ import { MembershipFirestoreRepository } from '@infrastructure/repositories/memb
 import { ModuleFirestoreRepository } from '@infrastructure/repositories/module-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { APP_ROUTES } from '@presentation/app.routes';
-import { AuthSessionNavigatorService } from '@presentation/shared/services/auth-session-navigator.service';
 import { environment } from '../environments/environment';
 
 /**
@@ -83,7 +82,6 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(APP_ROUTES),
     provideAnimations(),
-    provideEnvironmentInitializer(() => inject(AuthSessionNavigatorService)),
 
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),

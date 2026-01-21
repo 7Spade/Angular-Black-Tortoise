@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { Router } from '@angular/router';
 import { AuthStore } from '@application/stores/auth.store';
 
 @Component({
@@ -58,10 +57,8 @@ import { AuthStore } from '@application/stores/auth.store';
 })
 export class DashboardPageComponent {
   readonly authStore = inject(AuthStore);
-  private readonly router = inject(Router);
 
   onSignOut(): void {
     this.authStore.signOut();
-    this.router.navigate(['/auth/login']);
   }
 }
