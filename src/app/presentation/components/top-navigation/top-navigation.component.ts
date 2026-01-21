@@ -4,6 +4,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 import { IdentitySwitcherComponent } from '../identity-switcher/identity-switcher.component';
 import { WorkspaceSwitcherComponent } from '../workspace-switcher/workspace-switcher.component';
 import { AuthStore } from '@application/stores/auth.store';
@@ -17,6 +19,8 @@ import { AuthStore } from '@application/stores/auth.store';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatDividerModule,
+    MatMenuModule,
     IdentitySwitcherComponent,
     WorkspaceSwitcherComponent,
   ],
@@ -76,7 +80,7 @@ export class TopNavigationComponent {
     }
 
     const names = user.displayName.split(' ');
-    if (names.length >= 2) {
+    if (names.length >= 2 && names[0] && names[1] && names[0][0] && names[1][0]) {
       return (names[0][0] + names[1][0]).toUpperCase();
     }
 
@@ -87,6 +91,6 @@ export class TopNavigationComponent {
    * Sign out the current user
    */
   signOut(): void {
-    this.authStore.logout();
+    this.authStore.signOut();
   }
 }

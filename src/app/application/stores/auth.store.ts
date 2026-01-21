@@ -42,6 +42,7 @@ export const AuthStore = signalStore(
   withComputed(({ status, user }) => ({
     isAuthenticated: computed(() => status() === 'authenticated'),
     userId: computed(() => user()?.id.getValue() ?? null),
+    currentUser: computed(() => user()),
   })),
   withMethods((store, repository = inject<AuthRepository>(AUTH_REPOSITORY)) => ({
     clearError(): void {

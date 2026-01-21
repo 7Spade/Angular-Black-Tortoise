@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { IdentityStore } from '@application/stores/identity.store';
 import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 
@@ -22,6 +23,7 @@ export interface IdentitySelection {
     MatIconModule,
     MatListModule,
     MatMenuModule,
+    MatDividerModule,
   ],
   templateUrl: './identity-switcher.component.html',
   styleUrl: './identity-switcher.component.scss',
@@ -71,32 +73,6 @@ export class IdentitySwitcherComponent {
   }
 
   /**
-   * Select a team within an organization
-   */
-  selectTeam(teamId: string, teamName: string): void {
-    const selection: IdentitySelection = {
-      ownerId: teamId,
-      ownerType: 'team',
-      displayName: teamName,
-    };
-    this.identityStore.selectWorkspaceOwner('team', teamId);
-    this.identityChanged.emit(selection);
-  }
-
-  /**
-   * Select a partner
-   */
-  selectPartner(partnerId: string, partnerName: string): void {
-    const selection: IdentitySelection = {
-      ownerId: partnerId,
-      ownerType: 'partner',
-      displayName: partnerName,
-    };
-    this.identityStore.selectWorkspaceOwner('partner', partnerId);
-    this.identityChanged.emit(selection);
-  }
-
-  /**
    * Get the display name for the currently active identity
    */
   getActiveDisplayName(): string {
@@ -106,26 +82,17 @@ export class IdentitySwitcherComponent {
     }
 
     // Find the display name based on owner type
+    // Only user and organization are valid workspace owners
     switch (owner.ownerType) {
       case 'user': {
-        const user = this.users().find((u) => u.id.value === owner.ownerId);
-        return user?.displayName ?? 'User';
+        const user = this.users().find((u) => u.id.getValue() === owner.ownerId);
+        return user?.displayName.getValue() ?? 'User';
       }
       case 'organization': {
         const org = this.organizations().find(
-          (o) => o.id.value === owner.ownerId,
+          (o) => o.id.getValue() === owner.ownerId,
         );
-        return org?.name ?? 'Organization';
-      }
-      case 'team': {
-        const team = this.teams().find((t) => t.id.value === owner.ownerId);
-        return team?.name ?? 'Team';
-      }
-      case 'partner': {
-        const partner = this.partners().find(
-          (p) => p.id.value === owner.ownerId,
-        );
-        return partner?.name ?? 'Partner';
+        return org?.name.getValue() ?? 'Organization';
       }
       default:
         return 'Select Identity';

@@ -48,7 +48,7 @@ export class WorkspaceLayoutComponent {
     return modules.map((module) => ({
       label: this.formatModuleName(module.moduleKey),
       icon: this.getModuleIcon(module.moduleKey),
-      route: `/workspace/${this.currentWorkspace()?.id.value}/${module.moduleKey}`,
+      route: `/workspace/${this.currentWorkspace()?.id.getValue()}/${module.moduleKey}`,
     }));
   }
 

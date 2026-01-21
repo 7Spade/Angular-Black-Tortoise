@@ -30,6 +30,7 @@ export interface WorkspaceState {
   workspaces: Workspace[];
   modules: Module[];
   activeOwner: WorkspaceOwnerSelection | null;
+  selectedWorkspaceId: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -38,6 +39,7 @@ const initialState: WorkspaceState = {
   workspaces: [],
   modules: [],
   activeOwner: null,
+  selectedWorkspaceId: null,
   loading: false,
   error: null,
 };
@@ -45,9 +47,14 @@ const initialState: WorkspaceState = {
 export const WorkspaceStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ activeOwner, workspaces }) => ({
+  withComputed(({ activeOwner, workspaces, selectedWorkspaceId }) => ({
     hasOwner: computed(() => activeOwner() !== null),
     workspaceCount: computed(() => workspaces().length),
+    currentWorkspace: computed(() => {
+      const id = selectedWorkspaceId();
+      if (!id) return null;
+      return workspaces().find(w => w.id.getValue() === id) ?? null;
+    }),
   })),
   withMethods(
     (
@@ -57,6 +64,9 @@ export const WorkspaceStore = signalStore(
     ) => ({
       setActiveOwner(ownerType: WorkspaceOwnerType, ownerId: string): void {
         patchState(store, { activeOwner: { ownerId, ownerType } });
+      },
+      selectWorkspace(workspaceId: string | null): void {
+        patchState(store, { selectedWorkspaceId: workspaceId });
       },
       connectOwnerSelection: rxMethod<WorkspaceOwnerSelection>(
         pipe(

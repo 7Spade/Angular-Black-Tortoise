@@ -6,6 +6,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { WorkspaceStore } from '@application/stores/workspace.store';
 import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import { WorkspaceStatus } from '@domain/workspace/value-objects/workspace-status.value-object';
 
 export interface WorkspaceSelection {
   workspaceId: string;
@@ -73,11 +74,9 @@ export class WorkspaceSwitcherComponent {
 
       if (workspaceOwner.ownerId === owner.ownerId) {
         grouped.owned.push(workspace);
-      } else if (owner.ownerType === 'team') {
-        grouped.team.push(workspace);
-      } else if (owner.ownerType === 'partner') {
-        grouped.partner.push(workspace);
       } else {
+        // All other workspaces where the current identity is a member
+        // (regardless of whether they're accessed via team or partner)
         grouped.member.push(workspace);
       }
     }
@@ -90,14 +89,14 @@ export class WorkspaceSwitcherComponent {
    */
   onWorkspaceChange(workspaceId: string): void {
     const workspace = this.workspaces().find(
-      (w) => w.id.value === workspaceId,
+      (w) => w.id.getValue() === workspaceId,
     );
 
     if (workspace) {
       this.selectedWorkspaceId = workspaceId;
       this.workspaceChanged.emit({
         workspaceId,
-        workspaceName: workspace.name,
+        workspaceName: workspace.name.getValue(),
       });
 
       // Load modules for the selected workspace
@@ -108,8 +107,9 @@ export class WorkspaceSwitcherComponent {
   /**
    * Get status badge color based on workspace status
    */
-  getStatusColor(status: string): 'primary' | 'accent' | 'warn' {
-    switch (status) {
+  getStatusColor(status: WorkspaceStatus): 'primary' | 'accent' | 'warn' {
+    const statusValue = status.getValue();
+    switch (statusValue) {
       case 'active':
         return 'primary';
       case 'archived':
@@ -124,8 +124,9 @@ export class WorkspaceSwitcherComponent {
   /**
    * Get status display text
    */
-  getStatusText(status: string): string {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+  getStatusText(status: WorkspaceStatus): string {
+    const statusValue = status.getValue();
+    return statusValue.charAt(0).toUpperCase() + statusValue.slice(1);
   }
 
   /**
