@@ -6,10 +6,10 @@ import {
   query,
   where,
 } from '@angular/fire/firestore';
+import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
-import type { Observable } from 'rxjs';
 import type { ModuleRepository } from '@domain/modules/repositories/module.repository.interface';
-import { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
+import { Module } from '@domain/modules/entities/module.entity';
 import { ModuleId } from '@domain/modules/value-objects/module-id.value-object';
 import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 import { Collections } from '../collections/collection-names';
@@ -19,23 +19,32 @@ import { asString } from '../mappers/firestore-mappers';
 export class ModuleFirestoreRepository implements ModuleRepository {
   private readonly firestore = inject(Firestore);
 
-  getWorkspaceModules(workspaceId: string): Observable<WorkspaceModule[]> {
+  async getWorkspaceModules(workspaceId: string): Promise<Module[]> {
     const modulesRef = collection(this.firestore, Collections.modules);
     const modulesQuery = query(
       modulesRef,
       where('workspaceId', '==', workspaceId),
     );
-    return collectionData(modulesQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: ModuleId.create(asString(doc['id'])),
-          workspaceId: WorkspaceId.create(asString(doc['workspaceId'])),
-          moduleKey: asString(doc['moduleKey']),
-        })),
-      ),
-      map((modules) =>
-        modules.map((module) => WorkspaceModule.create(module)),
+    const docs = await firstValueFrom(
+      collectionData(modulesQuery, { idField: 'id' }).pipe(
+        map((docs) =>
+          docs.map((doc) => {
+            const moduleId = ModuleId.create(asString(doc['id']));
+            const wsIdResult = WorkspaceId.create(asString(doc['workspaceId']));
+            
+            if (wsIdResult.isFailure()) {
+              throw new Error(wsIdResult.getError().message);
+            }
+            
+            return Module.create({
+              id: moduleId,
+              workspaceId: wsIdResult.getValue(),
+              moduleKey: asString(doc['moduleKey']),
+            });
+          }),
+        ),
       ),
     );
+    return docs;
   }
 }

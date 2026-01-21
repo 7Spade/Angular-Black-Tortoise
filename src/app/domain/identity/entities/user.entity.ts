@@ -1,44 +1,49 @@
 import type { IdentityId } from '../value-objects/identity-id.value-object';
+import type { Email } from '../../shared/value-objects/email.value-object';
+import type { DisplayName } from '../value-objects/display-name.value-object';
+import type { IdentityStatus } from '../value-objects/identity-status.value-object';
+import type { Timestamp } from '../../shared/value-objects/timestamp.value-object';
 
 /**
  * User represents a personal identity that can own workspaces.
- * Minimal domain entity without UI-specific fields.
+ * Domain entity with email, displayName, status, and createdAt.
  */
 export class User {
   readonly id: IdentityId;
   readonly type: 'user' = 'user';
-  readonly organizationIds: ReadonlyArray<string>;
-  readonly teamIds: ReadonlyArray<string>;
-  readonly partnerIds: ReadonlyArray<string>;
-  readonly workspaceIds: ReadonlyArray<string>;
+  readonly email: Email;
+  readonly displayName: DisplayName;
+  readonly status: IdentityStatus;
+  readonly createdAt: Timestamp;
 
   private constructor(props: {
     id: IdentityId;
-    organizationIds: ReadonlyArray<string>;
-    teamIds: ReadonlyArray<string>;
-    partnerIds: ReadonlyArray<string>;
-    workspaceIds: ReadonlyArray<string>;
+    email: Email;
+    displayName: DisplayName;
+    status: IdentityStatus;
+    createdAt: Timestamp;
   }) {
     this.id = props.id;
-    this.organizationIds = props.organizationIds;
-    this.teamIds = props.teamIds;
-    this.partnerIds = props.partnerIds;
-    this.workspaceIds = props.workspaceIds;
+    this.email = props.email;
+    this.displayName = props.displayName;
+    this.status = props.status;
+    this.createdAt = props.createdAt;
   }
 
   static create(props: {
     id: IdentityId;
-    organizationIds?: ReadonlyArray<string>;
-    teamIds?: ReadonlyArray<string>;
-    partnerIds?: ReadonlyArray<string>;
-    workspaceIds?: ReadonlyArray<string>;
+    email: Email;
+    displayName: DisplayName;
+    status: IdentityStatus;
+    createdAt: Timestamp;
   }): User {
-    return new User({
-      id: props.id,
-      organizationIds: props.organizationIds ?? [],
-      teamIds: props.teamIds ?? [],
-      partnerIds: props.partnerIds ?? [],
-      workspaceIds: props.workspaceIds ?? [],
-    });
+    return new User(props);
+  }
+
+  /**
+   * Check equality by identity id
+   */
+  equals(other: User): boolean {
+    return this.id.equals(other.id);
   }
 }

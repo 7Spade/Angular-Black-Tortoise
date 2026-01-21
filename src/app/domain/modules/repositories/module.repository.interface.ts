@@ -1,9 +1,9 @@
-import type { Observable } from 'rxjs';
-import type { WorkspaceModule } from '../entities/workspace-module.entity';
+import type { Module } from '../entities/module.entity';
 
 /**
  * ModuleRepository defines the contract for module persistence.
+ * Returns Promises for framework-agnostic async operations (DDD requirement).
  */
 export interface ModuleRepository {
-  getWorkspaceModules(workspaceId: string): Observable<WorkspaceModule[]>;
+  getWorkspaceModules(workspaceId: string): Promise<Module[]>;
 }

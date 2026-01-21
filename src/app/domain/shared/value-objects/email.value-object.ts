@@ -1,5 +1,9 @@
+import { Result } from '../types/result.type';
+import { ValidationError } from '../errors/validation.error';
+
 /**
  * Email is a value object enforcing email format validation.
+ * Returns Result<Email, ValidationError> to make validation explicit.
  */
 export class Email {
   private readonly value: string;
@@ -8,16 +12,16 @@ export class Email {
     this.value = value;
   }
 
-  static create(value: string): Email {
+  static create(value: string): Result<Email, ValidationError> {
     if (!value || value.trim().length === 0) {
-      throw new Error('Email cannot be empty');
+      return Result.fail(new ValidationError('Email cannot be empty'));
     }
     const trimmed = value.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmed)) {
-      throw new Error('Invalid email format');
+      return Result.fail(new ValidationError('Invalid email format'));
     }
-    return new Email(trimmed);
+    return Result.ok(new Email(trimmed));
   }
 
   getValue(): string {

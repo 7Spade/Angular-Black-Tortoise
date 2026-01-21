@@ -1,0 +1,97 @@
+.top-navigation {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 1rem;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .brand-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .menu-button {
+      @media (min-width: 1024px) {
+        display: none;
+      }
+    }
+
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 500;
+      white-space: nowrap;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .navigation-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .nav-control {
+      @media (max-width: 1024px) {
+        &:not(.user-section) {
+          max-width: 200px;
+        }
+      }
+    }
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      padding: 0;
+
+      .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .avatar-initials {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--mat-sys-secondary);
+        color: var(--mat-sys-on-secondary);
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+::ng-deep .user-info {
+  padding: 1rem;
+  min-width: 200px;
+
+  .user-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .user-email {
+    font-size: 0.875rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

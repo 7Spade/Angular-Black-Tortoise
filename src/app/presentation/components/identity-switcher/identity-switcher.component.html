@@ -1,0 +1,62 @@
+<button
+  mat-button
+  [matMenuTriggerFor]="identityMenu"
+  class="identity-switcher-button"
+>
+  <mat-icon>account_circle</mat-icon>
+  <span class="identity-name">{{ getActiveDisplayName() }}</span>
+  <mat-icon>arrow_drop_down</mat-icon>
+</button>
+
+<mat-menu #identityMenu="matMenu" class="identity-switcher-menu">
+  <!-- User Section -->
+  @if (users().length > 0) {
+    <div class="menu-section">
+      <div class="section-header">Personal</div>
+      @for (user of users(); track user.id.getValue()) {
+        <button
+          mat-menu-item
+          (click)="selectUser(user.id.getValue(), user.displayName.getValue())"
+          [class.active]="
+            activeOwner()?.ownerType === 'user' &&
+            activeOwner()?.ownerId === user.id.getValue()
+          "
+        >
+          <mat-icon>person</mat-icon>
+          <span>{{ user.displayName.getValue() }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Organizations Section -->
+  @if (organizations().length > 0) {
+    <mat-divider></mat-divider>
+    <div class="menu-section">
+      <div class="section-header">Organizations</div>
+      @for (org of organizations(); track org.id.getValue()) {
+        <button
+          mat-menu-item
+          (click)="selectOrganization(org.id.getValue(), org.name.getValue())"
+          [class.active]="
+            activeOwner()?.ownerType === 'organization' &&
+            activeOwner()?.ownerId === org.id.getValue()
+          "
+        >
+          <mat-icon>business</mat-icon>
+          <span>{{ org.name.getValue() }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (
+    users().length === 0 &&
+    organizations().length === 0
+  ) {
+    <div class="empty-state">
+      <mat-icon>info</mat-icon>
+      <span>No identities available</span>
+    </div>
+  }
+</mat-menu>

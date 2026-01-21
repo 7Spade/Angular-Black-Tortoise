@@ -7,4 +7,5 @@ export const Collections = {
   organizationMemberships: 'organization-memberships',
   workspaces: 'workspaces',
   modules: 'modules',
+  workspaceModules: 'workspace-modules',
 } as const;

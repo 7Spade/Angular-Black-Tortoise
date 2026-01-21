@@ -1,67 +1,59 @@
+import { Result } from '../../shared/types/result.type';
+import { ValidationError } from '../../shared/errors/validation.error';
+
 /**
  * WorkspaceQuota represents the usage limits for a workspace.
  */
 export class WorkspaceQuota {
-  private readonly maxMembers: number;
+  private readonly maxModules: number;
   private readonly maxStorage: number;
-  private readonly maxProjects: number;
 
-  private constructor(maxMembers: number, maxStorage: number, maxProjects: number) {
-    this.maxMembers = maxMembers;
+  private constructor(maxModules: number, maxStorage: number) {
+    this.maxModules = maxModules;
     this.maxStorage = maxStorage;
-    this.maxProjects = maxProjects;
   }
 
   static create(props: {
-    maxMembers: number;
+    maxModules: number;
     maxStorage: number;
-    maxProjects: number;
-  }): WorkspaceQuota {
-    if (props.maxMembers < 0) {
-      throw new Error('WorkspaceQuota maxMembers cannot be negative');
+  }): Result<WorkspaceQuota, ValidationError> {
+    if (props.maxModules < 0) {
+      return Result.fail(
+        new ValidationError('WorkspaceQuota maxModules cannot be negative')
+      );
     }
     if (props.maxStorage < 0) {
-      throw new Error('WorkspaceQuota maxStorage cannot be negative');
+      return Result.fail(
+        new ValidationError('WorkspaceQuota maxStorage cannot be negative')
+      );
     }
-    if (props.maxProjects < 0) {
-      throw new Error('WorkspaceQuota maxProjects cannot be negative');
-    }
-    return new WorkspaceQuota(props.maxMembers, props.maxStorage, props.maxProjects);
+    return Result.ok(new WorkspaceQuota(props.maxModules, props.maxStorage));
   }
 
   static unlimited(): WorkspaceQuota {
-    return new WorkspaceQuota(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    return new WorkspaceQuota(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
   }
 
-  getMaxMembers(): number {
-    return this.maxMembers;
+  getMaxModules(): number {
+    return this.maxModules;
   }
 
   getMaxStorage(): number {
     return this.maxStorage;
   }
 
-  getMaxProjects(): number {
-    return this.maxProjects;
-  }
-
   equals(other: WorkspaceQuota): boolean {
     return (
-      this.maxMembers === other.maxMembers &&
-      this.maxStorage === other.maxStorage &&
-      this.maxProjects === other.maxProjects
+      this.maxModules === other.maxModules &&
+      this.maxStorage === other.maxStorage
     );
   }
 
-  canAddMembers(currentCount: number, toAdd: number): boolean {
-    return currentCount + toAdd <= this.maxMembers;
+  canAddModules(currentCount: number): boolean {
+    return currentCount < this.maxModules;
   }
 
   canAddStorage(currentUsage: number, toAdd: number): boolean {
     return currentUsage + toAdd <= this.maxStorage;
-  }
-
-  canAddProjects(currentCount: number, toAdd: number): boolean {
-    return currentCount + toAdd <= this.maxProjects;
   }
 }

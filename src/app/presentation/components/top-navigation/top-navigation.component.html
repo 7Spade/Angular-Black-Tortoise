@@ -1,0 +1,64 @@
+<mat-toolbar color="primary" class="top-navigation">
+  <!-- Logo/Brand -->
+  <div class="brand-section">
+    <button
+      mat-icon-button
+      class="menu-button"
+      aria-label="Toggle menu"
+      matTooltip="Menu"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="app-title">Angular Black Tortoise</span>
+  </div>
+
+  <!-- Spacer -->
+  <span class="spacer"></span>
+
+  <!-- Main Navigation Controls -->
+  @if (isAuthenticated()) {
+    <div class="navigation-controls">
+      <!-- Identity Switcher -->
+      <app-identity-switcher
+        (identityChanged)="onIdentityChanged($event)"
+        class="nav-control"
+      />
+
+      <!-- Workspace Switcher -->
+      <app-workspace-switcher
+        (workspaceChanged)="onWorkspaceChanged($event)"
+        class="nav-control"
+      />
+
+      <!-- User Avatar & Actions -->
+      <div class="user-section">
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="userMenu"
+          class="user-avatar"
+          aria-label="User menu"
+        >
+          @if (getUserAvatar(); as avatarUrl) {
+            <img [src]="avatarUrl" [alt]="currentUser()?.displayName || 'User'" class="avatar-image" />
+          } @else {
+            <div class="avatar-initials">
+              {{ getUserInitials() }}
+            </div>
+          }
+        </button>
+
+        <mat-menu #userMenu="matMenu">
+          <div class="user-info">
+            <div class="user-name">{{ currentUser()?.displayName || 'User' }}</div>
+            <div class="user-email">{{ currentUser()?.email }}</div>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="signOut()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign Out</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  }
+</mat-toolbar>
