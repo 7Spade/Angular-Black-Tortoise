@@ -30,6 +30,10 @@ export interface AuthStateSnapshot {
  * 2. Expose read-only state signals
  * 3. Provide action methods for UI
  * 4. Compute navigation signals
+ * 
+ * Routing Integration:
+ * - redirectPath returns /demo/ for authenticated users
+ * - Components can watch this signal but routing is handled via route config
  */
 @Injectable({ providedIn: 'root' })
 export class AuthSessionFacade {
@@ -52,12 +56,13 @@ export class AuthSessionFacade {
    * Returns the path to navigate to after authentication success
    * 
    * Architecture: Router decisions from facade signals only
+   * Updated: Now redirects to /demo/ instead of /demo/workspace/default/default
    */
   readonly redirectPath = computed(() => {
     const status = this.authStore.status();
     // Only redirect when status changes to authenticated
     if (status === 'authenticated') {
-      return '/demo/workspace/default/default';
+      return '/demo';
     }
     return null;
   });

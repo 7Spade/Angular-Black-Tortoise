@@ -46,10 +46,15 @@ const passwordMatchValidator = (
  * - Component uses AuthSessionFacade ONLY (not AuthStore)
  * - Calls facade methods for all actions
  * - Reacts to facade signals for UI updates
- * - Navigation handled via effect watching facade.redirectPath
+ * - NO navigation effects (routing handled by route config + guard)
  * - NO direct store access
  * - NO business logic
- * - NO routing decisions (facade provides signals)
+ * - NO routing decisions (routing is declarative in app.routes.ts)
+ * 
+ * Routing:
+ * - All routing/redirects handled via app.routes.ts and auth.guard.ts
+ * - Component removed navigation effect (was lines 409-421)
+ * - Signals-only pattern: no component-driven navigation side effects
  */
 @Component({
   selector: 'app-auth-page',
@@ -294,7 +299,6 @@ const passwordMatchValidator = (
 export class AuthPageComponent {
   readonly facade = inject(AuthSessionFacade);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
 
   readonly mode = toSignal(
     this.route.paramMap.pipe(map((params) => toAuthMode(params.get('mode')))),
@@ -406,19 +410,9 @@ export class AuthPageComponent {
       }
     });
 
-    /**
-     * Navigation Effect
-     * 
-     * Architecture: Router decisions from facade signals only
-     * Watches facade.redirectPath and navigates when auth succeeds
-     */
-    effect(() => {
-      const redirectPath = this.facade.redirectPath();
-      if (redirectPath) {
-        console.log('🚀 Navigating to:', redirectPath);
-        this.router.navigateByUrl(redirectPath);
-      }
-    });
+    // REMOVED: Navigation effect (lines 409-421 from original)
+    // Routing is now handled declaratively via app.routes.ts
+    // No component-driven navigation side effects
   }
 
   onLoginSubmit(): void {
