@@ -1,6 +1,7 @@
 import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
 import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-object';
 import type { WorkspaceQuota } from '../value-objects/workspace-quota.value-object';
+import type { ModuleId } from '@domain/modules/value-objects/module-id.value-object';
 import { WorkspaceLifecycle } from '../enums/workspace-lifecycle.enum';
 import { Workspace } from '../entities/workspace.entity';
 
@@ -28,7 +29,7 @@ export class WorkspaceAggregate {
     owner: WorkspaceOwner;
     lifecycle: WorkspaceLifecycle;
     quota: WorkspaceQuota;
-    moduleIds?: ReadonlyArray<string>;
+    moduleIds?: ReadonlyArray<ModuleId>;
   }): WorkspaceAggregate {
     const workspace = Workspace.create({
       id: props.id,
@@ -54,7 +55,7 @@ export class WorkspaceAggregate {
     return this.quota;
   }
 
-  getModuleIds(): ReadonlyArray<string> {
+  getModuleIds(): ReadonlyArray<ModuleId> {
     return this.workspace.moduleIds;
   }
 

@@ -1,4 +1,6 @@
 import type { MembershipId } from '../value-objects/membership-id.value-object';
+import type { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
+import type { UserId } from '@domain/identity/value-objects/user-id.value-object';
 import { MembershipRole } from '../enums/membership-role.enum';
 import { MembershipStatus } from '../enums/membership-status.enum';
 
@@ -8,24 +10,18 @@ import { MembershipStatus } from '../enums/membership-status.enum';
  */
 export class OrganizationMembership {
   readonly id: MembershipId;
-  readonly organizationId: string;
-  readonly userId: string;
+  readonly organizationId: OrganizationId;
+  readonly userId: UserId;
   readonly role: MembershipRole;
   readonly status: MembershipStatus;
 
   private constructor(props: {
     id: MembershipId;
-    organizationId: string;
-    userId: string;
+    organizationId: OrganizationId;
+    userId: UserId;
     role: MembershipRole;
     status: MembershipStatus;
   }) {
-    if (!props.organizationId || props.organizationId.trim().length === 0) {
-      throw new Error('OrganizationMembership must have an organization');
-    }
-    if (!props.userId || props.userId.trim().length === 0) {
-      throw new Error('OrganizationMembership must have a user');
-    }
     this.id = props.id;
     this.organizationId = props.organizationId;
     this.userId = props.userId;
@@ -35,8 +31,8 @@ export class OrganizationMembership {
 
   static create(props: {
     id: MembershipId;
-    organizationId: string;
-    userId: string;
+    organizationId: OrganizationId;
+    userId: UserId;
     role: MembershipRole;
     status: MembershipStatus;
   }): OrganizationMembership {

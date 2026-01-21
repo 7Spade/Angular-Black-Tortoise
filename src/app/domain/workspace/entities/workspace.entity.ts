@@ -1,5 +1,6 @@
 import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
 import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-object';
+import type { ModuleId } from '@domain/modules/value-objects/module-id.value-object';
 
 /**
  * Workspace represents a logical container owned by a user or organization only.
@@ -8,12 +9,12 @@ import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-obje
 export class Workspace {
   readonly id: WorkspaceId;
   readonly owner: WorkspaceOwner;
-  readonly moduleIds: ReadonlyArray<string>;
+  readonly moduleIds: ReadonlyArray<ModuleId>;
 
   private constructor(props: {
     id: WorkspaceId;
     owner: WorkspaceOwner;
-    moduleIds: ReadonlyArray<string>;
+    moduleIds: ReadonlyArray<ModuleId>;
   }) {
     this.id = props.id;
     this.owner = props.owner;
@@ -23,7 +24,7 @@ export class Workspace {
   static create(props: {
     id: WorkspaceId;
     owner: WorkspaceOwner;
-    moduleIds?: ReadonlyArray<string>;
+    moduleIds?: ReadonlyArray<ModuleId>;
   }): Workspace {
     return new Workspace({
       id: props.id,

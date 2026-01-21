@@ -1,4 +1,6 @@
 import type { MembershipId } from '../value-objects/membership-id.value-object';
+import type { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
+import type { UserId } from '@domain/identity/value-objects/user-id.value-object';
 
 /**
  * Partner represents an external organizational unit with member references.
@@ -7,17 +9,14 @@ import type { MembershipId } from '../value-objects/membership-id.value-object';
 export class Partner {
   readonly id: MembershipId;
   readonly type: 'partner' = 'partner';
-  readonly organizationId: string;
-  readonly memberIds: ReadonlyArray<string>;
+  readonly organizationId: OrganizationId;
+  readonly memberIds: ReadonlyArray<UserId>;
 
   private constructor(props: {
     id: MembershipId;
-    organizationId: string;
-    memberIds: ReadonlyArray<string>;
+    organizationId: OrganizationId;
+    memberIds: ReadonlyArray<UserId>;
   }) {
-    if (!props.organizationId || props.organizationId.trim().length === 0) {
-      throw new Error('Partner must belong to an organization');
-    }
     this.id = props.id;
     this.organizationId = props.organizationId;
     this.memberIds = props.memberIds;
@@ -25,8 +24,8 @@ export class Partner {
 
   static create(props: {
     id: MembershipId;
-    organizationId: string;
-    memberIds?: ReadonlyArray<string>;
+    organizationId: OrganizationId;
+    memberIds?: ReadonlyArray<UserId>;
   }): Partner {
     return new Partner({
       id: props.id,
