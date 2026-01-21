@@ -1,6 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import type { UseCase } from '../base/use-case.interface';
 import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import { UserId } from '@domain/identity/value-objects/user-id.value-object';
+import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
 import { WORKSPACE_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { WorkspaceRepository } from '@domain/workspace/repositories/workspace.repository.interface';
 
@@ -33,8 +35,9 @@ export class ListWorkspacesUseCase
   async execute(
     request: ListWorkspacesRequest
   ): Promise<ListWorkspacesResponse> {
-    const workspaces = await this.workspaceRepository.findByOwnerId(
-      request.ownerId
+    const ownerId = UserId.create(request.ownerId);
+    const workspaces = await this.workspaceRepository.findByOwner(
+      WorkspaceOwner.createUserOwner(ownerId),
     );
 
     return {

@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import type { UseCase } from '../base/use-case.interface';
 import { AUTH_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { AuthRepository } from '@domain/identity/repositories/auth.repository.interface';
@@ -41,7 +40,7 @@ export class SendPasswordResetUseCase
     this.store.setState({ loading: true, error: null });
 
     try {
-      await firstValueFrom(this.repository.sendPasswordReset(request.email));
+      await this.repository.sendPasswordReset(request.email);
       
       // Update store state on success (loading: false, no error)
       this.store.setState({

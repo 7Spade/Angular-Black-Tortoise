@@ -2,12 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   collection,
-  collectionData,
   query,
   where,
+  getDocs,
 } from '@angular/fire/firestore';
-import { map } from 'rxjs/operators';
-import type { Observable } from 'rxjs';
 import type { MembershipRepository } from '@domain/membership/repositories/membership.repository.interface';
 import { MembershipRole } from '@domain/membership/enums/membership-role.enum';
 import { MembershipStatus } from '@domain/membership/enums/membership-status.enum';
@@ -15,6 +13,8 @@ import { OrganizationMembership } from '@domain/membership/entities/organization
 import { Partner } from '@domain/membership/entities/partner.entity';
 import { Team } from '@domain/membership/entities/team.entity';
 import { MembershipId } from '@domain/membership/value-objects/membership-id.value-object';
+import { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
+import { UserId } from '@domain/identity/value-objects/user-id.value-object';
 import { Collections } from '../collections/collection-names';
 import { asString, asStringArray } from '../mappers/firestore-mappers';
 
@@ -22,76 +22,67 @@ import { asString, asStringArray } from '../mappers/firestore-mappers';
 export class MembershipFirestoreRepository implements MembershipRepository {
   private readonly firestore = inject(Firestore);
 
-  getTeams(organizationId: string): Observable<Team[]> {
+  async getTeams(organizationId: OrganizationId): Promise<Team[]> {
     const teamsRef = collection(this.firestore, Collections.teams);
     const teamsQuery = query(
       teamsRef,
-      where('organizationId', '==', organizationId),
+      where('organizationId', '==', organizationId.getValue()),
     );
-    return collectionData(teamsQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: MembershipId.create(asString(doc['id'])),
-          organizationId: asString(doc['organizationId']),
-          memberIds: asStringArray(doc['memberIds']),
-        })),
-      ),
-      map((teams) => teams.map((team) => Team.create(team))),
-    );
+    const snapshot = await getDocs(teamsQuery);
+    return snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      return Team.create({
+        id: MembershipId.create(docSnapshot.id),
+        organizationId: OrganizationId.create(asString(data['organizationId'])),
+        memberIds: asStringArray(data['memberIds']).map((id) => UserId.create(id)),
+      });
+    });
   }
 
-  getPartners(organizationId: string): Observable<Partner[]> {
+  async getPartners(organizationId: OrganizationId): Promise<Partner[]> {
     const partnersRef = collection(this.firestore, Collections.partners);
     const partnersQuery = query(
       partnersRef,
-      where('organizationId', '==', organizationId),
+      where('organizationId', '==', organizationId.getValue()),
     );
-    return collectionData(partnersQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => ({
-          id: MembershipId.create(asString(doc['id'])),
-          organizationId: asString(doc['organizationId']),
-          memberIds: asStringArray(doc['memberIds']),
-        })),
-      ),
-      map((partners) => partners.map((partner) => Partner.create(partner))),
-    );
+    const snapshot = await getDocs(partnersQuery);
+    return snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      return Partner.create({
+        id: MembershipId.create(docSnapshot.id),
+        organizationId: OrganizationId.create(asString(data['organizationId'])),
+        memberIds: asStringArray(data['memberIds']).map((id) => UserId.create(id)),
+      });
+    });
   }
 
-  getOrganizationMemberships(
-    organizationId: string,
-  ): Observable<OrganizationMembership[]> {
+  async getOrganizationMemberships(
+    organizationId: OrganizationId,
+  ): Promise<OrganizationMembership[]> {
     const membershipsRef = collection(
       this.firestore,
       Collections.organizationMemberships,
     );
     const membershipQuery = query(
       membershipsRef,
-      where('organizationId', '==', organizationId),
+      where('organizationId', '==', organizationId.getValue()),
     );
-    return collectionData(membershipQuery, { idField: 'id' }).pipe(
-      map((docs) =>
-        docs.map((doc) => {
-          const role = asString(doc['role']);
-          const status = asString(doc['status']);
-          return {
-            id: MembershipId.create(asString(doc['id'])),
-            organizationId: asString(doc['organizationId']),
-            userId: asString(doc['userId']),
-            role: Object.values(MembershipRole).includes(role as MembershipRole)
-              ? (role as MembershipRole)
-              : MembershipRole.Member,
-            status: Object.values(MembershipStatus).includes(
-              status as MembershipStatus,
-            )
-              ? (status as MembershipStatus)
-              : MembershipStatus.Active,
-          };
-        }),
-      ),
-      map((memberships) =>
-        memberships.map((membership) => OrganizationMembership.create(membership)),
-      ),
-    );
+    const snapshot = await getDocs(membershipQuery);
+    return snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      const role = asString(data['role']);
+      const status = asString(data['status']);
+      return OrganizationMembership.create({
+        id: MembershipId.create(docSnapshot.id),
+        organizationId: OrganizationId.create(asString(data['organizationId'])),
+        userId: UserId.create(asString(data['userId'])),
+        role: Object.values(MembershipRole).includes(role as MembershipRole)
+          ? (role as MembershipRole)
+          : MembershipRole.Member,
+        status: Object.values(MembershipStatus).includes(status as MembershipStatus)
+          ? (status as MembershipStatus)
+          : MembershipStatus.Active,
+      });
+    });
   }
 }

@@ -1,5 +1,6 @@
 import type { Workspace } from '../entities/workspace.entity';
-import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
+import type { WorkspaceOwner } from '../value-objects/workspace-owner.value-object';
+import type { WorkspaceId } from '../value-objects/workspace-id.value-object';
 
 /**
  * WorkspaceRepository defines the contract for workspace persistence.
@@ -12,24 +13,12 @@ import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
  */
 export interface WorkspaceRepository {
   /**
-   * Get all workspaces for a given owner.
-   * 
-   * @param ownerType - Type of owner (user or organization)
-   * @param ownerId - ID of the owner
+   * Find workspaces by owner.
+   *
+   * @param owner - Workspace owner value object
    * @returns Promise of workspaces
    */
-  getWorkspacesByOwner(
-    ownerType: WorkspaceOwnerType,
-    ownerId: string
-  ): Promise<Workspace[]>;
-
-  /**
-   * Find workspaces by owner ID (used by use cases).
-   * 
-   * @param ownerId - ID of the owner
-   * @returns Promise of workspaces
-   */
-  findByOwnerId(ownerId: string): Promise<Workspace[]>;
+  findByOwner(owner: WorkspaceOwner): Promise<Workspace[]>;
 
   /**
    * Save a workspace (create or update).
@@ -45,7 +34,7 @@ export interface WorkspaceRepository {
    * @param workspaceId - ID of the workspace
    * @returns Promise of workspace or null if not found
    */
-  findById(workspaceId: string): Promise<Workspace | null>;
+  findById(workspaceId: WorkspaceId): Promise<Workspace | null>;
 
   /**
    * Delete a workspace by ID.
@@ -53,5 +42,5 @@ export interface WorkspaceRepository {
    * @param workspaceId - ID of the workspace to delete
    * @returns Promise resolving when delete is complete
    */
-  delete(workspaceId: string): Promise<void>;
+  delete(workspaceId: WorkspaceId): Promise<void>;
 }

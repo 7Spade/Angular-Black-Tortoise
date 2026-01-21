@@ -9,7 +9,6 @@ import {
   user,
 } from '@angular/fire/auth';
 import { Firestore, doc, serverTimestamp, setDoc } from '@angular/fire/firestore';
-import { exhaustMap, from, map, Observable, throwError } from 'rxjs';
 import type { User } from '@angular/fire/auth';
 import type {
   AuthCredentials,
@@ -54,48 +53,46 @@ export class AuthAngularFireRepository implements AuthRepository {
   private readonly auth = inject(Auth);
   private readonly firestore = inject(Firestore);
 
-  authState(): Observable<AuthUser | null> {
-    return user(this.auth).pipe(
-      map((currentUser) => (currentUser ? toAuthUser(currentUser) : null)),
+  async authState(): Promise<AuthUser | null> {
+    const currentUser = this.auth.currentUser;
+    return currentUser ? toAuthUser(currentUser) : null;
+  }
+
+  async getCurrentUser(): Promise<AuthUser | null> {
+    const currentUser = this.auth.currentUser;
+    return currentUser ? toAuthUser(currentUser) : null;
+  }
+
+  async signIn(credentials: AuthCredentials): Promise<AuthUser> {
+    const result = await signInWithEmailAndPassword(
+      this.auth,
+      credentials.email,
+      credentials.password,
     );
+    return toAuthUser(result.user);
   }
 
-  signIn(credentials: AuthCredentials): Observable<AuthUser> {
-    return from(
-      signInWithEmailAndPassword(
-        this.auth,
-        credentials.email,
-        credentials.password,
-      ),
-    ).pipe(map((result) => toAuthUser(result.user)));
-  }
-
-  signUp(credentials: AuthCredentials): Observable<AuthUser> {
-    return from(
-      createUserWithEmailAndPassword(
-        this.auth,
-        credentials.email,
-        credentials.password,
-      ),
-    ).pipe(
-      exhaustMap((result) =>
-        from(this.createUserProfile(result.user, credentials)),
-      ),
+  async signUp(credentials: AuthCredentials): Promise<AuthUser> {
+    const result = await createUserWithEmailAndPassword(
+      this.auth,
+      credentials.email,
+      credentials.password,
     );
+    return this.createUserProfile(result.user, credentials);
   }
 
-  signOut(): Observable<void> {
-    return from(signOut(this.auth));
+  async signOut(): Promise<void> {
+    await signOut(this.auth);
   }
 
-  sendPasswordReset(email: string): Observable<void> {
-    return from(sendPasswordResetEmail(this.auth, email));
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
   }
 
-  updateProfile(update: AuthProfileUpdate): Observable<AuthUser> {
+  async updateProfile(update: AuthProfileUpdate): Promise<AuthUser> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) {
-      return throwError(() => new Error('No authenticated user.'));
+      throw new Error('No authenticated user.');
     }
     const profileUpdate: { displayName?: string | null; photoURL?: string | null } = {};
     if (update.displayName !== undefined) {
@@ -104,10 +101,9 @@ export class AuthAngularFireRepository implements AuthRepository {
     if (update.photoUrl !== undefined) {
       profileUpdate.photoURL = update.photoUrl;
     }
-    return from(updateProfile(currentUser, profileUpdate)).pipe(
-      exhaustMap(() => from(currentUser.reload())),
-      map(() => toAuthUser(currentUser)),
-    );
+    await updateProfile(currentUser, profileUpdate);
+    await currentUser.reload();
+    return toAuthUser(currentUser);
   }
 
   private async createUserProfile(

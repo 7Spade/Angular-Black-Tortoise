@@ -14,6 +14,10 @@ import { exhaustMap, filter, pipe, tap } from 'rxjs';
 import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 import type { WorkspaceModule } from '@domain/modules/entities/workspace-module.entity';
 import type { Workspace } from '@domain/workspace/entities/workspace.entity';
+import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
+import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
+import { UserId } from '@domain/identity/value-objects/user-id.value-object';
+import { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
 import {
   AppEventBus,
   WorkspaceOwnerSelection,
@@ -68,9 +72,14 @@ export const WorkspaceStore = signalStore(
             }),
           ),
           exhaustMap((selection) =>
-            repository.getWorkspacesByOwner(
-              selection.ownerType,
-              selection.ownerId,
+            repository.findByOwner(
+              WorkspaceOwner.create({
+                id:
+                  selection.ownerType === 'user'
+                    ? UserId.create(selection.ownerId)
+                    : OrganizationId.create(selection.ownerId),
+                type: selection.ownerType,
+              }),
             ),
           ),
           tapResponse({
@@ -85,7 +94,7 @@ export const WorkspaceStore = signalStore(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
           exhaustMap((workspaceId) =>
-            moduleRepository.getWorkspaceModules(workspaceId),
+            moduleRepository.getWorkspaceModules(WorkspaceId.create(workspaceId)),
           ),
           tapResponse({
             next: (modules) => patchState(store, { modules, loading: false }),

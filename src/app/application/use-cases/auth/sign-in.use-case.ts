@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import type { UseCase } from '../base/use-case.interface';
 import type { AuthCredentials, AuthUser } from '@domain/identity/entities/auth-user.entity';
 import { AUTH_REPOSITORY } from '@application/tokens/repository.tokens';
@@ -46,7 +45,7 @@ export class SignInUseCase implements UseCase<SignInRequest, SignInResponse> {
     this.store.setState({ loading: true, error: null });
 
     try {
-      const user = await firstValueFrom(this.repository.signIn(credentials));
+      const user = await this.repository.signIn(credentials);
       
       // Update store state on success
       this.store.setState({
