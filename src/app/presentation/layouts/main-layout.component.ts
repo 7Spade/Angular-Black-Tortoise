@@ -45,9 +45,9 @@ import { AuthStore } from '@application/stores/auth.store';
         class="layout-sidenav"
       >
         <mat-nav-list>
-          <a mat-list-item routerLink="/app/dashboard" routerLinkActive="active">
-            <mat-icon matListItemIcon>dashboard</mat-icon>
-            <span matListItemTitle>Dashboard</span>
+          <a mat-list-item routerLink="/demo" routerLinkActive="active">
+            <mat-icon matListItemIcon>developer_mode</mat-icon>
+            <span matListItemTitle>Demo</span>
           </a>
           <a mat-list-item routerLink="/app/workspaces" routerLinkActive="active">
             <mat-icon matListItemIcon>folder</mat-icon>

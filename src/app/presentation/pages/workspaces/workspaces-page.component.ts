@@ -219,7 +219,6 @@ export class WorkspacesPageComponent {
         userId,
         'user'
       );
-      console.log('Created workspace:', workspaceId);
     } catch (error) {
       console.error('Failed to create workspace:', error);
     } finally {

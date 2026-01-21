@@ -1,5 +1,7 @@
 import {
   ApplicationConfig,
+  inject,
+  provideEnvironmentInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import {
@@ -42,6 +44,7 @@ import { MembershipFirestoreRepository } from '@infrastructure/repositories/memb
 import { ModuleFirestoreRepository } from '@infrastructure/repositories/module-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { APP_ROUTES } from '@presentation/app.routes';
+import { AuthSessionNavigatorService } from '@presentation/shared/services/auth-session-navigator.service';
 import { environment } from '../environments/environment';
 
 /**
@@ -77,29 +80,18 @@ import { environment } from '../environments/environment';
  */
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Zone-less change detection MUST be the first provider
-    // This tells Angular to use signal-based change detection instead of Zone.js
-    // Note: This is now a stable API in Angular 20+ (no longer experimental)
     provideZonelessChangeDetection(),
-
-    // Router configuration
     provideRouter(APP_ROUTES),
     provideAnimations(),
+    provideEnvironmentInitializer(() => inject(AuthSessionNavigatorService)),
 
-    // Firebase App Initialization
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-
-    // Firebase Services
-    // All Firebase services work in zone-less mode because:
-    // - Their observables are consumed by @ngrx/signals stores
-    // - State updates trigger change detection via signal modifications
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
     provideAnalytics(() => getAnalytics()),
     ScreenTrackingService,
     UserTrackingService,
 
-    // Firebase App Check with reCAPTCHA Enterprise (disabled in non-production to avoid local 403s)
     ...(environment.production && environment.appCheckSiteKey
       ? [
           provideAppCheck(() => {
@@ -132,13 +124,5 @@ export const appConfig: ApplicationConfig = {
     { provide: MEMBERSHIP_REPOSITORY, useClass: MembershipFirestoreRepository },
     { provide: MODULE_REPOSITORY, useClass: ModuleFirestoreRepository },
     { provide: WORKSPACE_REPOSITORY, useClass: WorkspaceFirestoreRepository },
-
-    /**
-     * Bootstrapping is now 100% reactive:
-     * - AuthStore.withHooks.onInit() syncs Firebase auth state into signals
-     * - ContextStore reacts to AuthStore signals to build workspace context
-     * This removes any reliance on legacy initializer tokens and keeps the app
-     * fully zone-less.
-     */
   ],
 };
