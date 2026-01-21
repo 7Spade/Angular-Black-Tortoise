@@ -39,5 +39,8 @@ import { MatDividerModule } from '@angular/material/divider';
   ],
 })
 export class ModuleDemoSectionComponent {
+  // DEMO RULE:
+  // Workspace is provided by route context.
+  // Demo MUST NOT query, select, or mutate workspace state.
   readonly workspaceId = input.required<string>();
 }
