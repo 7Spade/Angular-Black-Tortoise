@@ -1,0 +1,110 @@
+<!-- Workspace Switcher -->
+<!-- Material Design 3 Implementation -->
+<button
+  mat-button
+  [matMenuTriggerFor]="workspaceMenu"
+  class="workspace-switcher-trigger"
+  aria-label="Switch workspace"
+>
+  <mat-icon>workspaces</mat-icon>
+  <span class="current-workspace-name">{{ getCurrentWorkspaceName() }}</span>
+  <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+</button>
+
+<mat-menu #workspaceMenu="matMenu" class="workspace-switcher-menu">
+  <!-- Search Box -->
+  <div class="search-container" (click)="$event.stopPropagation()">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search workspaces..."
+      [(ngModel)]="searchQuery"
+      (click)="$event.stopPropagation()"
+    />
+    @if (searchQuery()) {
+      <button
+        mat-icon-button
+        class="clear-search"
+        (click)="clearSearch()"
+        aria-label="Clear search"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-icon>hourglass_empty</mat-icon>
+      <span>Loading workspaces...</span>
+    </div>
+  }
+
+  <!-- Recent Workspaces -->
+  @if (!loading() && recentWorkspaces().length > 0) {
+    <div class="menu-section-header">Recent</div>
+    @for (workspace of recentWorkspaces(); track workspace.id.value) {
+      <button
+        mat-menu-item
+        (click)="switchWorkspace(workspace.id.value)"
+        class="workspace-item"
+      >
+        <mat-icon>folder</mat-icon>
+        <span class="workspace-info">
+          <span class="workspace-name">{{ workspace.id.value.substring(0, 16) }}</span>
+          <span class="workspace-meta">Owner</span>
+        </span>
+      </button>
+    }
+
+    @if (allOwnedWorkspaces().length > recentWorkspaces().length) {
+      <mat-divider></mat-divider>
+    }
+  }
+
+  <!-- All Owned Workspaces -->
+  @if (!loading()) {
+    @if (currentIdentityType() === 'user') {
+      <div class="menu-section-header">My Workspaces</div>
+    } @else if (currentIdentityType() === 'organization') {
+      <div class="menu-section-header">Organization Workspaces</div>
+    }
+
+    @if (allOwnedWorkspaces().length === 0) {
+      <div class="empty-state">
+        <mat-icon>workspace_premium</mat-icon>
+        <span>No workspaces yet</span>
+      </div>
+    } @else {
+      @for (workspace of allOwnedWorkspaces(); track workspace.id.value) {
+        <button
+          mat-menu-item
+          (click)="switchWorkspace(workspace.id.value)"
+          class="workspace-item"
+        >
+          <mat-icon>folder</mat-icon>
+          <span class="workspace-info">
+            <span class="workspace-name">{{ workspace.id.value.substring(0, 16) }}</span>
+            <span class="workspace-meta">{{ workspace.moduleIds.length }} modules</span>
+          </span>
+        </button>
+      }
+    }
+
+    <!-- Create New Workspace -->
+    <button mat-menu-item class="create-new-action" (click)="createWorkspace()">
+      <mat-icon>add</mat-icon>
+      <span>
+        @if (currentIdentityType() === 'user') {
+          Create Personal Workspace
+        } @else {
+          Create Organization Workspace
+        }
+      </span>
+    </button>
+  }
+</mat-menu>

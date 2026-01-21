@@ -1,6 +1,5 @@
 /**
- * Presentation Layouts
- * Reusable layout components
+ * Presentation Layer - Layout Components
+ * Export all layout components for easy importing
  */
-// Layout components will go here
-export {};
+export * from './main-layout/main-layout.component';

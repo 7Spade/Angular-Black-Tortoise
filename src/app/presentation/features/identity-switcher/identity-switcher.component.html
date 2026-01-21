@@ -1,0 +1,141 @@
+<!-- Identity Switcher (Account Switcher) -->
+<!-- Material Design 3 Implementation -->
+<button
+  mat-button
+  [matMenuTriggerFor]="identityMenu"
+  class="identity-switcher-trigger"
+  aria-label="Switch account or identity"
+>
+  <mat-icon>account_circle</mat-icon>
+  <span class="current-identity-name">{{ getCurrentDisplayName() }}</span>
+  <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+</button>
+
+<mat-menu #identityMenu="matMenu" class="identity-switcher-menu">
+  <!-- Personal Account Section -->
+  <div class="menu-section-header">Personal Account</div>
+  
+  @for (user of users(); track user.id.value) {
+    <button
+      mat-menu-item
+      (click)="switchIdentity('user', user.id.value)"
+      [class.active]="
+        activeWorkspaceOwner()?.ownerType === 'user' &&
+        activeWorkspaceOwner()?.ownerId === user.id.value
+      "
+    >
+      <mat-icon>person</mat-icon>
+      <span class="identity-info">
+        <span class="identity-name">{{ user.id.value.substring(0, 12) }}</span>
+        <span class="identity-type">User</span>
+      </span>
+      @if (
+        activeWorkspaceOwner()?.ownerType === 'user' &&
+        activeWorkspaceOwner()?.ownerId === user.id.value
+      ) {
+        <mat-icon class="check-icon">check</mat-icon>
+      }
+    </button>
+  }
+
+  <mat-divider></mat-divider>
+
+  <!-- Organizations Section -->
+  <div class="menu-section-header">Organizations</div>
+  
+  @for (org of organizations(); track org.id.value) {
+    <button
+      mat-menu-item
+      (click)="switchIdentity('organization', org.id.value)"
+      [class.active]="
+        activeWorkspaceOwner()?.ownerType === 'organization' &&
+        activeWorkspaceOwner()?.ownerId === org.id.value
+      "
+    >
+      <mat-icon>business</mat-icon>
+      <span class="identity-info">
+        <span class="identity-name">{{ org.id.value.substring(0, 12) }}</span>
+        <span class="identity-type">Organization</span>
+      </span>
+      @if (
+        activeWorkspaceOwner()?.ownerType === 'organization' &&
+        activeWorkspaceOwner()?.ownerId === org.id.value
+      ) {
+        <mat-icon class="check-icon">check</mat-icon>
+      }
+    </button>
+  }
+  
+  <button mat-menu-item class="create-new-action">
+    <mat-icon>add</mat-icon>
+    <span>Create New Organization</span>
+  </button>
+
+  <!-- Teams Section (Only visible when Organization is active) -->
+  @if (isOrganizationContext() && teams().length > 0) {
+    <mat-divider></mat-divider>
+    <div class="menu-section-header">
+      Teams
+      @if (currentOrganizationId()) {
+        <span class="context-org">({{ currentOrganizationId()?.substring(0, 8) }})</span>
+      }
+    </div>
+    
+    @for (team of teams(); track team.id.value) {
+      <button
+        mat-menu-item
+        (click)="selectTeamContext(team.id.value)"
+        class="context-item"
+      >
+        <mat-icon>groups</mat-icon>
+        <span class="identity-info">
+          <span class="identity-name">{{ team.id.value.substring(0, 12) }}</span>
+          <span class="identity-meta">{{ team.memberIds.length }} members</span>
+        </span>
+      </button>
+    }
+    
+    <button mat-menu-item class="create-new-action">
+      <mat-icon>add</mat-icon>
+      <span>Create New Team</span>
+    </button>
+  }
+
+  <!-- Partners Section (Only visible when Organization is active) -->
+  @if (isOrganizationContext() && partners().length > 0) {
+    <mat-divider></mat-divider>
+    <div class="menu-section-header">
+      Partners
+      @if (currentOrganizationId()) {
+        <span class="context-org">({{ currentOrganizationId()?.substring(0, 8) }})</span>
+      }
+    </div>
+    
+    @for (partner of partners(); track partner.id.value) {
+      <button
+        mat-menu-item
+        (click)="selectPartnerContext(partner.id.value)"
+        class="context-item"
+      >
+        <mat-icon>handshake</mat-icon>
+        <span class="identity-info">
+          <span class="identity-name">{{ partner.id.value.substring(0, 12) }}</span>
+          <span class="identity-meta">{{ partner.memberIds.length }} members</span>
+        </span>
+      </button>
+    }
+    
+    <button mat-menu-item class="create-new-action">
+      <mat-icon>add</mat-icon>
+      <span>Add New Partner</span>
+    </button>
+  }
+
+  <mat-divider></mat-divider>
+
+  <!-- Settings -->
+  <button mat-menu-item>
+    <mat-icon>settings</mat-icon>
+    <span>Manage Accounts</span>
+  </button>
+</mat-menu>

@@ -1,0 +1,85 @@
+<!-- Main Layout - Global Shell -->
+<!-- Material Design 3 Implementation -->
+
+<mat-sidenav-container class="main-container">
+  <!-- Header (Fixed, 64px) -->
+  <mat-toolbar class="main-header">
+    <!-- Left Zone: Logo + Workspace Switcher -->
+    <div class="header-left">
+      <button
+        mat-icon-button
+        (click)="toggleSidenav()"
+        aria-label="Toggle sidebar"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+      
+      <div class="logo">
+        <mat-icon class="logo-icon">workspaces</mat-icon>
+        <span class="logo-text">Black Tortoise</span>
+      </div>
+
+      <app-workspace-switcher></app-workspace-switcher>
+    </div>
+
+    <!-- Center Zone: Search (Future Enhancement) -->
+    <div class="header-center">
+      <!-- Global search will be added here -->
+    </div>
+
+    <!-- Right Zone: Notifications + Settings + Identity Switcher -->
+    <div class="header-right">
+      <button mat-icon-button aria-label="Notifications">
+        <mat-icon matBadge="3" matBadgeColor="warn">notifications</mat-icon>
+      </button>
+
+      <button mat-icon-button aria-label="Settings">
+        <mat-icon>settings</mat-icon>
+      </button>
+
+      <app-identity-switcher></app-identity-switcher>
+    </div>
+  </mat-toolbar>
+
+  <!-- Sidebar (240px) -->
+  <mat-sidenav
+    mode="side"
+    [opened]="sidenavOpened"
+    class="main-sidebar"
+  >
+    <mat-nav-list>
+      <div class="sidebar-section-header">Modules</div>
+      
+      <a mat-list-item routerLink="/overview" routerLinkActive="active">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Overview</span>
+      </a>
+
+      <a mat-list-item routerLink="/documents" routerLinkActive="active">
+        <mat-icon matListItemIcon>folder</mat-icon>
+        <span matListItemTitle>Documents</span>
+      </a>
+
+      <a mat-list-item routerLink="/tasks" routerLinkActive="active">
+        <mat-icon matListItemIcon>task_alt</mat-icon>
+        <span matListItemTitle>Tasks</span>
+        <span matListItemMeta class="task-badge">5</span>
+      </a>
+
+      <a mat-list-item routerLink="/calendar" routerLinkActive="active">
+        <mat-icon matListItemIcon>calendar_today</mat-icon>
+        <span matListItemTitle>Calendar</span>
+      </a>
+
+      <a mat-list-item routerLink="/settings" routerLinkActive="active">
+        <mat-icon matListItemIcon>settings</mat-icon>
+        <span matListItemTitle>Settings</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main Content Area -->
+  <mat-sidenav-content class="main-content">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
