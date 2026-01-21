@@ -92,6 +92,7 @@ npm run serve
 ```
 
 Navigate to `http://localhost:4200/`
+After signing in, the default authenticated entrypoint is `/demo`.
 
 ### Build
 

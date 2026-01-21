@@ -1,6 +1,1 @@
-/**
- * Presentation Shared
- * Reusable UI components, directives, pipes
- */
-// Shared components will go here
-export {};
+export * from './services/auth-session-navigator.service';

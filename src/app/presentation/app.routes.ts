@@ -1,69 +1,84 @@
-import { Routes } from '@angular/router';
-import { authGuard } from '@application/guards/auth.guard';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
+import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
 export const APP_ROUTES: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'auth/login',
+    redirectTo: 'login',
   },
   {
-    path: 'auth',
-    loadChildren: () =>
-      import('./pages/auth/auth.routes').then((module) => module.AUTH_ROUTES),
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/auth/auth-page.component').then(
+        (module) => module.AuthPageComponent,
+      ),
+  },
+  {
+    path: 'login/:mode',
+    loadComponent: () =>
+      import('./pages/auth/auth-page.component').then(
+        (module) => module.AuthPageComponent,
+      ),
+  },
+  {
+    path: 'demo',
+    canActivate: [
+      () => {
+        const session = inject(AuthSessionFacade);
+        const snapshot = session.getSnapshot();
+        return snapshot.sessionReady && snapshot.isAuthenticated
+          ? true
+          : inject(Router).parseUrl('/login');
+      },
+    ],
+    loadComponent: () =>
+      import('./pages/demo/demo-page.component').then(
+        (module) => module.DemoPageComponent,
+      ),
   },
   {
     path: 'app',
-    canActivate: [authGuard],
+    canActivate: [
+      () => {
+        const session = inject(AuthSessionFacade);
+        const snapshot = session.getSnapshot();
+        return snapshot.sessionReady && snapshot.isAuthenticated
+          ? true
+          : inject(Router).parseUrl('/login');
+      },
+    ],
     loadComponent: () =>
       import('./layouts/main-layout.component').then(
-        (module) => module.MainLayoutComponent
+        (module) => module.MainLayoutComponent,
       ),
     children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./pages/dashboard/dashboard-page.component').then(
-            (module) => module.DashboardPageComponent
-          ),
-      },
-      {
-        path: 'demo',
-        loadComponent: () =>
-          import('./pages/demo/demo-page.component').then(
-            (module) => module.DemoPageComponent
-          ),
-      },
       {
         path: 'workspaces',
         loadComponent: () =>
           import('./pages/workspaces/workspaces-page.component').then(
-            (module) => module.WorkspacesPageComponent
+            (module) => module.WorkspacesPageComponent,
           ),
       },
       {
         path: 'workspace/:id',
         loadComponent: () =>
           import('./pages/dashboard/dashboard-page.component').then(
-            (module) => module.DashboardPageComponent
+            (module) => module.DashboardPageComponent,
           ),
       },
       {
         path: 'settings',
         loadComponent: () =>
           import('./pages/dashboard/dashboard-page.component').then(
-            (module) => module.DashboardPageComponent
+            (module) => module.DashboardPageComponent,
           ),
       },
     ],
   },
   {
     path: '**',
-    redirectTo: 'auth/login',
+    redirectTo: 'login',
   },
 ];

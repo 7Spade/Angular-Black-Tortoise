@@ -1,5 +1,7 @@
 import {
   ApplicationConfig,
+  inject,
+  provideEnvironmentInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import {
@@ -36,12 +38,16 @@ import {
   MODULE_REPOSITORY,
   WORKSPACE_REPOSITORY,
 } from '@application/tokens/repository.tokens';
+import { AuthStore } from '@application/stores/auth.store';
+import { AuthStateUseCase } from '@application/use-cases/auth/auth-state.use-case';
+import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 import { AuthAngularFireRepository } from '@infrastructure/repositories/auth-angularfire.repository';
 import { IdentityFirestoreRepository } from '@infrastructure/repositories/identity-firestore.repository';
 import { MembershipFirestoreRepository } from '@infrastructure/repositories/membership-firestore.repository';
 import { ModuleFirestoreRepository } from '@infrastructure/repositories/module-firestore.repository';
 import { WorkspaceFirestoreRepository } from '@infrastructure/repositories/workspace-firestore.repository';
 import { APP_ROUTES } from '@presentation/app.routes';
+import { AuthSessionNavigatorService } from '@presentation/shared/services/auth-session-navigator.service';
 import { environment } from '../environments/environment';
 
 /**
@@ -85,6 +91,12 @@ export const appConfig: ApplicationConfig = {
     // Router configuration
     provideRouter(APP_ROUTES),
     provideAnimations(),
+    {
+      provide: AuthSessionFacade,
+      useFactory: () =>
+        new AuthSessionFacade(inject(AuthStore), new AuthStateUseCase()),
+    },
+    provideEnvironmentInitializer(() => inject(AuthSessionNavigatorService)),
 
     // Firebase App Initialization
     provideFirebaseApp(() => initializeApp(environment.firebase)),

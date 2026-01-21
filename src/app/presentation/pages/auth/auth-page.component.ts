@@ -19,7 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { AuthStore } from '@application/stores/auth.store';
 
@@ -281,7 +281,6 @@ const passwordMatchValidator = (
 })
 export class AuthPageComponent {
   readonly authStore = inject(AuthStore);
-  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   readonly mode = toSignal(
@@ -358,12 +357,6 @@ export class AuthPageComponent {
   readonly resetEmail = this.resetForm.controls.email;
 
   constructor() {
-    effect(() => {
-      if (this.authStore.isAuthenticated()) {
-        this.router.navigate(['/app']);
-      }
-    });
-
     effect(() => {
       const currentMode = this.mode();
       this.authStore.clearError();
