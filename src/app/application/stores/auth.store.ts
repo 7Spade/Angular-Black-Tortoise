@@ -6,19 +6,29 @@ import {
   withHooks,
   withMethods,
   withState,
+  type,
+  getState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
-import { exhaustMap, pipe, tap } from 'rxjs';
+import { exhaustMap, pipe } from 'rxjs';
 import type {
-  AuthCredentials,
-  AuthProfileUpdate,
   AuthStatus,
+  AuthUser,
 } from '@domain/identity/entities/auth-user.entity';
-import type { AuthUser } from '@domain/identity/entities/auth-user.entity';
 import { AUTH_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { AuthRepository } from '@domain/identity/repositories/auth.repository.interface';
 
+/**
+ * Auth Store State Shape
+ * 
+ * Architecture Compliance:
+ * - Store is a PURE STATE CONTAINER
+ * - NO business logic (moved to use cases)
+ * - NO repository calls for business operations (moved to use cases)
+ * - ONLY state synchronization (syncAuthState) and state updates
+ * - Use cases call patchState to update this store
+ */
 export interface AuthState {
   user: AuthUser | null;
   status: AuthStatus;
@@ -36,6 +46,15 @@ const initialState: AuthState = {
 const toErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
+/**
+ * Auth Store
+ * 
+ * Refactored to follow clean architecture:
+ * - State management ONLY
+ * - Business logic removed (now in use cases)
+ * - Use cases update this store via exposed setState method
+ * - syncAuthState monitors Firebase auth state changes
+ */
 export const AuthStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
@@ -45,9 +64,24 @@ export const AuthStore = signalStore(
     userId: computed(() => user()?.id.getValue() ?? null),
   })),
   withMethods((store, repository = inject<AuthRepository>(AUTH_REPOSITORY)) => ({
+    /**
+     * Clear error state
+     */
     clearError(): void {
       patchState(store, { error: null });
     },
+    
+    /**
+     * Update state - exposed for use cases
+     */
+    setState(update: Partial<AuthState>): void {
+      patchState(store, update);
+    },
+    
+    /**
+     * Synchronize with Firebase auth state changes
+     * This is the ONLY rxMethod remaining - it monitors auth state, not business operations
+     */
     syncAuthState: rxMethod<void>(
       pipe(
         exhaustMap(() => repository.authState()),
@@ -68,108 +102,10 @@ export const AuthStore = signalStore(
         }),
       ),
     ),
-    signIn: rxMethod<AuthCredentials>(
-      pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
-        exhaustMap((credentials) => repository.signIn(credentials)),
-        tapResponse({
-          next: (user) =>
-            patchState(store, {
-              user,
-              status: 'authenticated',
-              loading: false,
-              error: null,
-            }),
-          error: (error: unknown) =>
-            patchState(store, {
-              error: toErrorMessage(error),
-              status: 'error',
-              loading: false,
-            }),
-        }),
-      ),
-    ),
-    signUp: rxMethod<AuthCredentials>(
-      pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
-        exhaustMap((credentials) => repository.signUp(credentials)),
-        tapResponse({
-          next: (user) =>
-            patchState(store, {
-              user,
-              status: 'authenticated',
-              loading: false,
-              error: null,
-            }),
-          error: (error: unknown) =>
-            patchState(store, {
-              error: toErrorMessage(error),
-              status: 'error',
-              loading: false,
-            }),
-        }),
-      ),
-    ),
-    signOut: rxMethod<void>(
-      pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
-        exhaustMap(() => repository.signOut()),
-        tapResponse({
-          next: () =>
-            patchState(store, {
-              user: null,
-              status: 'unauthenticated',
-              loading: false,
-              error: null,
-            }),
-          error: (error: unknown) =>
-            patchState(store, {
-              error: toErrorMessage(error),
-              status: 'error',
-              loading: false,
-            }),
-        }),
-      ),
-    ),
-    sendPasswordReset: rxMethod<string>(
-      pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
-        exhaustMap((email) => repository.sendPasswordReset(email)),
-        tapResponse({
-          next: () => patchState(store, { loading: false, error: null }),
-          error: (error: unknown) =>
-            patchState(store, {
-              error: toErrorMessage(error),
-              status: 'error',
-              loading: false,
-            }),
-        }),
-      ),
-    ),
-    updateProfile: rxMethod<AuthProfileUpdate>(
-      pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
-        exhaustMap((update) => repository.updateProfile(update)),
-        tapResponse({
-          next: (user) =>
-            patchState(store, {
-              user,
-              status: 'authenticated',
-              loading: false,
-              error: null,
-            }),
-          error: (error: unknown) =>
-            patchState(store, {
-              error: toErrorMessage(error),
-              status: 'error',
-              loading: false,
-            }),
-        }),
-      ),
-    ),
   })),
   withHooks({
     onInit(store) {
+      // Initialize auth state synchronization
       store.syncAuthState();
     },
   }),

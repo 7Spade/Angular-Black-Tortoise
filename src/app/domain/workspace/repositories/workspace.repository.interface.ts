@@ -1,4 +1,3 @@
-import type { Observable } from 'rxjs';
 import type { Workspace } from '../entities/workspace.entity';
 import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 
@@ -9,6 +8,7 @@ import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
  * - Repository interfaces belong to Domain layer
  * - Implementations belong to Infrastructure layer
  * - Methods return domain entities, not DTOs
+ * - All methods return Promises for non-reactive domain layer
  */
 export interface WorkspaceRepository {
   /**
@@ -16,12 +16,12 @@ export interface WorkspaceRepository {
    * 
    * @param ownerType - Type of owner (user or organization)
    * @param ownerId - ID of the owner
-   * @returns Observable of workspaces
+   * @returns Promise of workspaces
    */
   getWorkspacesByOwner(
     ownerType: WorkspaceOwnerType,
     ownerId: string
-  ): Observable<Workspace[]>;
+  ): Promise<Workspace[]>;
 
   /**
    * Find workspaces by owner ID (used by use cases).

@@ -19,9 +19,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
-import { AuthStore } from '@application/stores/auth.store';
+import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
 type AuthMode = 'login' | 'register' | 'reset';
 
@@ -39,6 +39,18 @@ const passwordMatchValidator = (
   return password === confirm ? null : { passwordMismatch: true };
 };
 
+/**
+ * Auth Page Component
+ * 
+ * Architecture Compliance:
+ * - Component uses AuthSessionFacade ONLY (not AuthStore)
+ * - Calls facade methods for all actions
+ * - Reacts to facade signals for UI updates
+ * - Navigation handled via effect watching facade.redirectPath
+ * - NO direct store access
+ * - NO business logic
+ * - NO routing decisions (facade provides signals)
+ */
 @Component({
   selector: 'app-auth-page',
   standalone: true,
@@ -98,7 +110,7 @@ const passwordMatchValidator = (
                   mat-raised-button
                   color="primary"
                   type="submit"
-                  [disabled]="loginForm.invalid || authStore.loading()"
+                  [disabled]="loginForm.invalid || facade.loading()"
                 >
                   Sign in
                 </button>
@@ -166,7 +178,7 @@ const passwordMatchValidator = (
                   mat-raised-button
                   color="primary"
                   type="submit"
-                  [disabled]="registerForm.invalid || authStore.loading()"
+                  [disabled]="registerForm.invalid || facade.loading()"
                 >
                   Create account
                 </button>
@@ -202,12 +214,12 @@ const passwordMatchValidator = (
                   mat-raised-button
                   color="primary"
                   type="submit"
-                  [disabled]="resetForm.invalid || authStore.loading()"
+                  [disabled]="resetForm.invalid || facade.loading()"
                 >
                   Send reset link
                 </button>
               </form>
-              @if (resetSent() && !authStore.error()) {
+              @if (resetSent() && !facade.error()) {
                 <p class="auth-success" role="status">
                   Reset email sent. Check your inbox.
                 </p>
@@ -221,7 +233,7 @@ const passwordMatchValidator = (
             }
           }
 
-          @if (authStore.error(); as error) {
+          @if (facade.error(); as error) {
             <p class="auth-error" role="alert">{{ error }}</p>
           }
         </mat-card-content>
@@ -280,8 +292,9 @@ const passwordMatchValidator = (
   ],
 })
 export class AuthPageComponent {
-  readonly authStore = inject(AuthStore);
+  readonly facade = inject(AuthSessionFacade);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly mode = toSignal(
     this.route.paramMap.pipe(map((params) => toAuthMode(params.get('mode')))),
@@ -357,9 +370,10 @@ export class AuthPageComponent {
   readonly resetEmail = this.resetForm.controls.email;
 
   constructor() {
+    // Handle mode changes
     effect(() => {
       const currentMode = this.mode();
-      this.authStore.clearError();
+      this.facade.clearError();
       this.resetSent.set(false);
       this.resetRequested.set(false);
       switch (currentMode) {
@@ -375,12 +389,13 @@ export class AuthPageComponent {
       }
     });
 
+    // Handle password reset success feedback
     effect(() => {
       if (this.mode() !== 'reset') {
         return;
       }
-      const hasError = this.authStore.error();
-      const isDone = this.resetRequested() && !this.authStore.loading() && !hasError;
+      const hasError = this.facade.error();
+      const isDone = this.resetRequested() && !this.facade.loading() && !hasError;
       if (isDone) {
         this.resetSent.set(true);
         this.resetRequested.set(false);
@@ -390,6 +405,20 @@ export class AuthPageComponent {
         this.resetRequested.set(false);
       }
     });
+
+    /**
+     * Navigation Effect
+     * 
+     * Architecture: Router decisions from facade signals only
+     * Watches facade.redirectPath and navigates when auth succeeds
+     */
+    effect(() => {
+      const redirectPath = this.facade.redirectPath();
+      if (redirectPath) {
+        console.log('🚀 Navigating to:', redirectPath);
+        this.router.navigateByUrl(redirectPath);
+      }
+    });
   }
 
   onLoginSubmit(): void {
@@ -397,7 +426,8 @@ export class AuthPageComponent {
     if (this.loginForm.invalid) {
       return;
     }
-    this.authStore.signIn(this.loginForm.getRawValue());
+    // Call facade method (which calls use case)
+    this.facade.signIn(this.loginForm.getRawValue());
   }
 
   onRegisterSubmit(): void {
@@ -406,7 +436,8 @@ export class AuthPageComponent {
       return;
     }
     const { email, password } = this.registerForm.getRawValue();
-    this.authStore.signUp({ email, password });
+    // Call facade method (which calls use case)
+    this.facade.signUp({ email, password });
   }
 
   onResetSubmit(): void {
@@ -416,6 +447,7 @@ export class AuthPageComponent {
     }
     this.resetSent.set(false);
     this.resetRequested.set(true);
-    this.authStore.sendPasswordReset(this.resetForm.getRawValue().email);
+    // Call facade method (which calls use case)
+    this.facade.sendPasswordReset({ email: this.resetForm.getRawValue().email });
   }
 }

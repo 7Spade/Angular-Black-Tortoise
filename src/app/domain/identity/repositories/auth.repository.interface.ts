@@ -1,14 +1,14 @@
-import type { Observable } from 'rxjs';
 import type { AuthUser, AuthCredentials, AuthProfileUpdate } from '../entities/auth-user.entity';
 
 /**
  * AuthRepository defines the contract for authentication operations.
+ * All methods return Promises for non-reactive domain layer.
  */
 export interface AuthRepository {
-  authState(): Observable<AuthUser | null>;
-  signIn(credentials: AuthCredentials): Observable<AuthUser>;
-  signUp(credentials: AuthCredentials): Observable<AuthUser>;
-  signOut(): Observable<void>;
-  sendPasswordReset(email: string): Observable<void>;
-  updateProfile(update: AuthProfileUpdate): Observable<AuthUser>;
+  getCurrentUser(): Promise<AuthUser | null>;
+  signIn(credentials: AuthCredentials): Promise<AuthUser>;
+  signUp(credentials: AuthCredentials): Promise<AuthUser>;
+  signOut(): Promise<void>;
+  sendPasswordReset(email: string): Promise<void>;
+  updateProfile(update: AuthProfileUpdate): Promise<AuthUser>;
 }

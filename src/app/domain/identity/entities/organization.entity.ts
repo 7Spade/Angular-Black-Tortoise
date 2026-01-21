@@ -1,23 +1,25 @@
-import type { IdentityId } from '../value-objects/identity-id.value-object';
+import type { OrganizationId } from '../value-objects/organization-id.value-object';
+import type { MembershipId } from '@domain/membership/value-objects/membership-id.value-object';
+import type { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 
 /**
  * Organization represents an organization identity with member references.
  * Minimal domain entity without UI-specific fields.
  */
 export class Organization {
-  readonly id: IdentityId;
+  readonly id: OrganizationId;
   readonly type: 'organization' = 'organization';
-  readonly memberIds: ReadonlyArray<string>;
-  readonly teamIds: ReadonlyArray<string>;
-  readonly partnerIds: ReadonlyArray<string>;
-  readonly workspaceIds: ReadonlyArray<string>;
+  readonly memberIds: ReadonlyArray<MembershipId>;
+  readonly teamIds: ReadonlyArray<MembershipId>;
+  readonly partnerIds: ReadonlyArray<MembershipId>;
+  readonly workspaceIds: ReadonlyArray<WorkspaceId>;
 
   private constructor(props: {
-    id: IdentityId;
-    memberIds: ReadonlyArray<string>;
-    teamIds: ReadonlyArray<string>;
-    partnerIds: ReadonlyArray<string>;
-    workspaceIds: ReadonlyArray<string>;
+    id: OrganizationId;
+    memberIds: ReadonlyArray<MembershipId>;
+    teamIds: ReadonlyArray<MembershipId>;
+    partnerIds: ReadonlyArray<MembershipId>;
+    workspaceIds: ReadonlyArray<WorkspaceId>;
   }) {
     this.id = props.id;
     this.memberIds = props.memberIds;
@@ -27,11 +29,11 @@ export class Organization {
   }
 
   static create(props: {
-    id: IdentityId;
-    memberIds?: ReadonlyArray<string>;
-    teamIds?: ReadonlyArray<string>;
-    partnerIds?: ReadonlyArray<string>;
-    workspaceIds?: ReadonlyArray<string>;
+    id: OrganizationId;
+    memberIds?: ReadonlyArray<MembershipId>;
+    teamIds?: ReadonlyArray<MembershipId>;
+    partnerIds?: ReadonlyArray<MembershipId>;
+    workspaceIds?: ReadonlyArray<WorkspaceId>;
   }): Organization {
     return new Organization({
       id: props.id,

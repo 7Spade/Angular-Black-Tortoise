@@ -1,13 +1,22 @@
-import { inject } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { Routes, Router } from '@angular/router';
-import { filter, map, take } from 'rxjs/operators';
-import { AuthSessionFacade } from '@application/facades/auth-session.facade';
+import { Routes } from '@angular/router';
+import { authGuard } from '@application/guards/auth.guard';
 
+/**
+ * App Routes
+ * 
+ * Architecture Compliance:
+ * - Uses extracted authGuard (no inline logic)
+ * - Clean, declarative route configuration
+ * - Guard handles all auth checks via facade signals
+ */
 export const APP_ROUTES: Routes = [
   {
     path: '',
     pathMatch: 'full',
+    redirectTo: '/auth/login',
+  },
+  {
+    path: 'auth/:mode',
     loadComponent: () =>
       import('./pages/auth/auth-page.component').then(
         (module) => module.AuthPageComponent,
@@ -15,18 +24,7 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'demo/workspace/:workspaceId/:moduleId',
-    canActivate: [
-      () => {
-        const session = inject(AuthSessionFacade);
-        return toObservable(session.authStatus).pipe(
-          filter((status) => status !== 'initializing'),
-          take(1),
-          map((status) =>
-            status === 'authenticated' ? true : inject(Router).parseUrl('/login'),
-          ),
-        );
-      },
-    ],
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/demo/demo-page.component').then(
         (module) => module.DemoPageComponent,
@@ -34,18 +32,7 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'app',
-    canActivate: [
-      () => {
-        const session = inject(AuthSessionFacade);
-        return toObservable(session.authStatus).pipe(
-          filter((status) => status !== 'initializing'),
-          take(1),
-          map((status) =>
-            status === 'authenticated' ? true : inject(Router).parseUrl('/login'),
-          ),
-        );
-      },
-    ],
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layouts/main-layout.component').then(
         (module) => module.MainLayoutComponent,
@@ -76,9 +63,6 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: '**',
-    loadComponent: () =>
-      import('./pages/auth/auth-page.component').then(
-        (module) => module.AuthPageComponent,
-      ),
+    redirectTo: '/auth/login',
   },
 ];
