@@ -1,8 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { AuthStore } from '@application/stores/auth.store';
+import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
+/**
+ * Dashboard Page Component
+ * 
+ * Architecture Compliance:
+ * - Component uses AuthSessionFacade (not AuthStore)
+ * - Calls facade methods for actions
+ * - Reads facade signals for UI state
+ */
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
@@ -16,7 +24,7 @@ import { AuthStore } from '@application/stores/auth.store';
           <mat-card-subtitle>Authenticated workspace</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          @if (authStore.user(); as user) {
+          @if (facade.user(); as user) {
             <p class="dashboard-text">Signed in as {{ user.email }}</p>
           } @else {
             <p class="dashboard-text">Preparing your session...</p>
@@ -27,7 +35,7 @@ import { AuthStore } from '@application/stores/auth.store';
             mat-stroked-button
             type="button"
             (click)="onSignOut()"
-            [disabled]="authStore.loading()"
+            [disabled]="facade.loading()"
           >
             Sign out
           </button>
@@ -56,9 +64,9 @@ import { AuthStore } from '@application/stores/auth.store';
   ],
 })
 export class DashboardPageComponent {
-  readonly authStore = inject(AuthStore);
+  readonly facade = inject(AuthSessionFacade);
 
   onSignOut(): void {
-    this.authStore.signOut();
+    this.facade.signOut();
   }
 }

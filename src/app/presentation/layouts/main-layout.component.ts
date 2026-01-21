@@ -5,13 +5,14 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { AuthStore } from '@application/stores/auth.store';
+import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
 /**
  * Main Layout Component - Application Shell
  * 
- * Architecture:
- * - Smart component that manages layout state
+ * Architecture Compliance:
+ * - Component uses AuthSessionFacade (not AuthStore)
+ * - Calls facade methods for actions
  * - Uses Material Design 3 components
  * - Fully responsive with mobile-first approach
  * - Zone-less compatible (signals only)
@@ -74,7 +75,7 @@ import { AuthStore } from '@application/stores/auth.store';
           </button>
           <h1 class="layout-title">Angular Black Tortoise</h1>
           <span class="layout-spacer"></span>
-          @if (authStore.user(); as user) {
+          @if (facade.user(); as user) {
             <span class="layout-user">{{ user.email }}</span>
           }
           <button
@@ -159,7 +160,7 @@ import { AuthStore } from '@application/stores/auth.store';
   ],
 })
 export class MainLayoutComponent {
-  readonly authStore = inject(AuthStore);
+  readonly facade = inject(AuthSessionFacade);
 
   readonly sidenavOpened = signal(true);
 
@@ -168,6 +169,6 @@ export class MainLayoutComponent {
   }
 
   onSignOut(): void {
-    this.authStore.signOut();
+    this.facade.signOut();
   }
 }
