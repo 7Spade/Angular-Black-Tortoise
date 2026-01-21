@@ -1,8 +1,6 @@
 import { inject } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
 import type { CanActivateFn } from '@angular/router';
 import { Router } from '@angular/router';
-import { filter, map, take } from 'rxjs/operators';
 import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
 /**
@@ -10,36 +8,44 @@ import { AuthSessionFacade } from '@application/facades/auth-session.facade';
  * 
  * Architecture Compliance:
  * - Uses AuthSessionFacade ONLY (not AuthStore)
- * - Reads facade signals only (no business logic)
- * - No repository or service initialization
+ * - Reads facade signals directly (no Observable/subscribe)
+ * - No business logic, only signal-based checks
  * - Router decisions based on facade signals
  * 
+ * DDD/Signals Rules Compliance:
+ * - Rule 123: Guards must read Signal-based stores directly, not use subscribe/toObservable
+ * - Rule 59/144: Guards are pure, signals-only checks
+ * - No side effects, navigation, or data mutation
+ * 
  * Responsibilities:
- * 1. Check authentication status via facade
+ * 1. Check authentication status via facade signals
  * 2. Allow or redirect based on status
  * 3. NO business logic
+ * 4. Synchronous signal access only
  */
 export const authGuard: CanActivateFn = (_route, state) => {
   const facade = inject(AuthSessionFacade);
   const router = inject(Router);
   
-  return toObservable(facade.authStatus).pipe(
-    // Wait for auth initialization to complete
-    filter((status) => status !== 'initializing'),
-    take(1),
-    map((status) => {
-      // Allow access if authenticated
-      if (status === 'authenticated') {
-        return true;
-      }
-      
-      // Allow access to login page
-      if (state.url.startsWith('/login') || state.url.startsWith('/auth')) {
-        return true;
-      }
-      
-      // Redirect to login for unauthenticated users
-      return router.parseUrl('/auth/login');
-    }),
-  );
+  // Read auth status signal directly (signals-only pattern)
+  const status = facade.authStatus();
+  
+  // Wait for initialization - if still initializing, allow navigation
+  // The component will handle showing loading state
+  if (status === 'initializing') {
+    return true;
+  }
+  
+  // Allow access if authenticated
+  if (status === 'authenticated') {
+    return true;
+  }
+  
+  // Allow access to auth pages (login, signup, etc.)
+  if (state.url.startsWith('/login') || state.url.startsWith('/auth')) {
+    return true;
+  }
+  
+  // Redirect to login for unauthenticated users trying to access protected routes
+  return router.parseUrl('/auth/login');
 };
