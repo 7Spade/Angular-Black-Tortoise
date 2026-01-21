@@ -1,4 +1,3 @@
-import { Injectable, computed, signal } from '@angular/core';
 import {
   PermissionDemoUseCase,
   PermissionDemoState,
@@ -7,28 +6,38 @@ import {
   PermissionEvaluationResult,
 } from '@application/use-cases/demo/permission-demo.use-case';
 
-@Injectable({ providedIn: 'root' })
 export class PermissionDemoFacade {
-  private readonly state = signal<PermissionDemoState>({
+  private state: PermissionDemoState = {
     workspaceId: null,
     scope: null,
     permissions: [],
     loading: false,
-  });
-
-  readonly workspaceId = computed(() => this.state().workspaceId);
-  readonly scope = computed(() => this.state().scope);
-  readonly permissions = computed(() => this.state().permissions);
-  readonly loading = computed(() => this.state().loading);
+  };
 
   constructor(private readonly useCase: PermissionDemoUseCase) {}
 
+  workspaceId(): string | null {
+    return this.state.workspaceId;
+  }
+
+  scope(): 'workspace' | 'module' | 'entity' | null {
+    return this.state.scope;
+  }
+
+  permissions(): ReadonlyArray<string> {
+    return this.state.permissions;
+  }
+
+  loading(): boolean {
+    return this.state.loading;
+  }
+
   async initialize(): Promise<void> {
-    this.state.set(await this.useCase.loadState());
+    this.state = await this.useCase.loadState();
   }
 
   async selectScope(input: PermissionScopeInput): Promise<void> {
-    this.state.set(await this.useCase.selectScope(input));
+    this.state = await this.useCase.selectScope(input);
   }
 
   async evaluatePermission(

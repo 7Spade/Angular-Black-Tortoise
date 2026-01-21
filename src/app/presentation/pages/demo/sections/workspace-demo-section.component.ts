@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -76,7 +76,7 @@ export class WorkspaceDemoSectionComponent {
   readonly ownerId = signal('');
   readonly ownerType = signal<'user' | 'organization' | null>(null);
   readonly workspaceId = signal('');
-  readonly workspaceSummary = computed(() => {
+  workspaceSummary(): string {
     const id = this.workspaceId().trim();
     const owner = this.ownerId().trim();
     const type = this.ownerType();
@@ -87,7 +87,7 @@ export class WorkspaceDemoSectionComponent {
       return `${type}:${owner}`;
     }
     return 'not selected';
-  });
+  }
 
   onOwnerIdInput(value: string): void {
     this.ownerId.set(value);

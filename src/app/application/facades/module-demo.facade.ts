@@ -1,4 +1,3 @@
-import { Injectable, computed, signal } from '@angular/core';
 import {
   ModuleDemoUseCase,
   ModuleDemoState,
@@ -6,31 +5,41 @@ import {
   ModuleRefreshInput,
 } from '@application/use-cases/demo/module-demo.use-case';
 
-@Injectable({ providedIn: 'root' })
 export class ModuleDemoFacade {
-  private readonly state = signal<ModuleDemoState>({
+  private state: ModuleDemoState = {
     workspaceId: null,
     moduleKeys: [],
     activeModuleKey: null,
     loading: false,
-  });
-
-  readonly workspaceId = computed(() => this.state().workspaceId);
-  readonly moduleKeys = computed(() => this.state().moduleKeys);
-  readonly activeModuleKey = computed(() => this.state().activeModuleKey);
-  readonly loading = computed(() => this.state().loading);
+  };
 
   constructor(private readonly useCase: ModuleDemoUseCase) {}
 
+  workspaceId(): string | null {
+    return this.state.workspaceId;
+  }
+
+  moduleKeys(): ReadonlyArray<string> {
+    return this.state.moduleKeys;
+  }
+
+  activeModuleKey(): string | null {
+    return this.state.activeModuleKey;
+  }
+
+  loading(): boolean {
+    return this.state.loading;
+  }
+
   async initialize(): Promise<void> {
-    this.state.set(await this.useCase.loadState());
+    this.state = await this.useCase.loadState();
   }
 
   async selectModule(input: ModuleSelectionInput): Promise<void> {
-    this.state.set(await this.useCase.selectModule(input));
+    this.state = await this.useCase.selectModule(input);
   }
 
   async refreshModules(input: ModuleRefreshInput): Promise<void> {
-    this.state.set(await this.useCase.refreshModules(input));
+    this.state = await this.useCase.refreshModules(input);
   }
 }

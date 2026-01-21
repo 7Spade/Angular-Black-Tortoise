@@ -1,4 +1,3 @@
-import { Injectable, computed, signal } from '@angular/core';
 import {
   IdentityDemoUseCase,
   IdentitySelectionInput,
@@ -7,26 +6,33 @@ import {
   IdentityAccessResult,
 } from '@application/use-cases/demo/identity-demo.use-case';
 
-@Injectable({ providedIn: 'root' })
 export class IdentityDemoFacade {
-  private readonly state = signal<IdentityDemoState>({
+  private state: IdentityDemoState = {
     currentIdentityId: null,
     identityType: null,
     loading: false,
-  });
-
-  readonly currentIdentityId = computed(() => this.state().currentIdentityId);
-  readonly identityType = computed(() => this.state().identityType);
-  readonly loading = computed(() => this.state().loading);
+  };
 
   constructor(private readonly useCase: IdentityDemoUseCase) {}
 
+  currentIdentityId(): string | null {
+    return this.state.currentIdentityId;
+  }
+
+  identityType(): 'user' | 'organization' | 'bot' | null {
+    return this.state.identityType;
+  }
+
+  loading(): boolean {
+    return this.state.loading;
+  }
+
   async initialize(): Promise<void> {
-    this.state.set(await this.useCase.loadState());
+    this.state = await this.useCase.loadState();
   }
 
   async selectIdentity(input: IdentitySelectionInput): Promise<void> {
-    this.state.set(await this.useCase.selectIdentity(input));
+    this.state = await this.useCase.selectIdentity(input);
   }
 
   async checkAccess(

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -77,13 +77,13 @@ export class SettingsDemoSectionComponent {
   readonly workspaceId = signal('');
   readonly themePreference = signal<'system' | 'light' | 'dark'>('system');
   readonly locale = signal('');
-  readonly settingsSummary = computed(() => {
+  settingsSummary(): string {
     const workspace = this.workspaceId().trim();
     const locale = this.locale().trim();
     return workspace && locale
       ? `${workspace}/${this.themePreference()}/${locale}`
       : 'not set';
-  });
+  }
 
   onWorkspaceIdInput(value: string): void {
     this.workspaceId.set(value);

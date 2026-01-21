@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -71,11 +71,11 @@ export class IdentityDemoSectionComponent {
 
   readonly identityId = signal('');
   readonly identityType = signal<'user' | 'organization' | 'bot' | null>(null);
-  readonly identitySummary = computed(() => {
+  identitySummary(): string {
     const id = this.identityId().trim();
     const type = this.identityType();
     return id && type ? `${type}:${id}` : 'not selected';
-  });
+  }
 
   onIdentityIdInput(value: string): void {
     this.identityId.set(value);

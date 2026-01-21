@@ -1,5 +1,3 @@
-import { Injectable } from '@angular/core';
-
 export interface IdentityDemoState {
   readonly currentIdentityId: string | null;
   readonly identityType: 'user' | 'organization' | 'bot' | null;

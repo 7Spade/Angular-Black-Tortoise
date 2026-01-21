@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -81,11 +81,11 @@ export class PermissionDemoSectionComponent {
   readonly workspaceId = signal('');
   readonly scope = signal<'workspace' | 'module' | 'entity' | null>(null);
   readonly action = signal<'read' | 'write' | 'admin' | null>(null);
-  readonly scopeSummary = computed(() => {
+  scopeSummary(): string {
     const workspace = this.workspaceId().trim();
     const scope = this.scope();
     return workspace && scope ? `${workspace}/${scope}` : 'not selected';
-  });
+  }
 
   onWorkspaceIdInput(value: string): void {
     this.workspaceId.set(value);

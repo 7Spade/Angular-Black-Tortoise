@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -85,14 +85,14 @@ export class ModuleDemoSectionComponent {
     | 'journal'
     | null
   >(null);
-  readonly moduleSummary = computed(() => {
+  moduleSummary(): string {
     const workspace = this.workspaceId().trim();
     const moduleKey = this.moduleKey();
     if (!workspace || !moduleKey) {
       return 'not selected';
     }
     return `${workspace}/${moduleKey}`;
-  });
+  }
 
   onWorkspaceIdInput(value: string): void {
     this.workspaceId.set(value);
