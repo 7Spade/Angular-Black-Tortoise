@@ -1,5 +1,5 @@
-import type { UserId } from '@domain/identity/value-objects/user-id.value-object';
-import type { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
+import { UserId } from '@domain/identity/value-objects/user-id.value-object';
+import { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
 import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
 
 /**
@@ -26,6 +26,19 @@ export class WorkspaceOwner {
 
   static createOrganizationOwner(organizationId: OrganizationId): WorkspaceOwner {
     return new WorkspaceOwner(null, organizationId, 'organization');
+  }
+
+  static create(props: { id: UserId | OrganizationId; type: WorkspaceOwnerType }): WorkspaceOwner {
+    if (props.type === 'user') {
+      if (!(props.id instanceof UserId)) {
+        throw new Error('WorkspaceOwner requires UserId for user ownership');
+      }
+      return WorkspaceOwner.createUserOwner(props.id);
+    }
+    if (!(props.id instanceof OrganizationId)) {
+      throw new Error('WorkspaceOwner requires OrganizationId for organization ownership');
+    }
+    return WorkspaceOwner.createOrganizationOwner(props.id);
   }
 
   getUserId(): UserId {

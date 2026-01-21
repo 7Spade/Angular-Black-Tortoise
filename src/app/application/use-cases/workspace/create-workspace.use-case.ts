@@ -3,6 +3,8 @@ import type { UseCase } from '../base/use-case.interface';
 import { Workspace } from '@domain/workspace/entities/workspace.entity';
 import { WorkspaceId } from '@domain/workspace/value-objects/workspace-id.value-object';
 import { WorkspaceOwner } from '@domain/workspace/value-objects/workspace-owner.value-object';
+import { UserId } from '@domain/identity/value-objects/user-id.value-object';
+import { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
 import { WORKSPACE_REPOSITORY } from '@application/tokens/repository.tokens';
 import type { WorkspaceRepository } from '@domain/workspace/repositories/workspace.repository.interface';
 
@@ -40,8 +42,12 @@ export class CreateWorkspaceUseCase
   ): Promise<CreateWorkspaceResponse> {
     // Create value objects
     const workspaceId = WorkspaceId.generate();
+    const ownerId =
+      request.ownerType === 'user'
+        ? UserId.create(request.ownerId)
+        : OrganizationId.create(request.ownerId);
     const owner = WorkspaceOwner.create({
-      id: request.ownerId,
+      id: ownerId,
       type: request.ownerType,
     });
 

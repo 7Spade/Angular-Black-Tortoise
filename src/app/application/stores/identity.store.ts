@@ -15,6 +15,7 @@ import type { Organization } from '@domain/identity/entities/organization.entity
 import type { User } from '@domain/identity/entities/user.entity';
 import type { Partner } from '@domain/membership/entities/partner.entity';
 import type { Team } from '@domain/membership/entities/team.entity';
+import { OrganizationId } from '@domain/identity/value-objects/organization-id.value-object';
 import { AppEventBus } from '@application/event-bus/app-event-bus.service';
 import {
   IDENTITY_REPOSITORY,
@@ -73,7 +74,7 @@ export const IdentityStore = signalStore(
       loadUsers: rxMethod<void>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          exhaustMap(() => repository.getUsers()),
+          exhaustMap(() => repository.findUsers()),
           tapResponse({
             next: (users) => patchState(store, { users, loading: false }),
             error: (error: Error) =>
@@ -84,7 +85,7 @@ export const IdentityStore = signalStore(
       loadOrganizations: rxMethod<void>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          exhaustMap(() => repository.getOrganizations()),
+          exhaustMap(() => repository.findOrganizations()),
           tapResponse({
             next: (organizations) =>
               patchState(store, { organizations, loading: false }),
@@ -96,7 +97,7 @@ export const IdentityStore = signalStore(
       loadBots: rxMethod<void>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          exhaustMap(() => repository.getBots()),
+          exhaustMap(() => repository.findBots()),
           tapResponse({
             next: (bots) => patchState(store, { bots, loading: false }),
             error: (error: Error) =>
@@ -108,7 +109,7 @@ export const IdentityStore = signalStore(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
           exhaustMap((organizationId) =>
-            membershipRepository.getTeams(organizationId),
+            membershipRepository.getTeams(OrganizationId.create(organizationId)),
           ),
           tapResponse({
             next: (teams) => patchState(store, { teams, loading: false }),
@@ -121,7 +122,7 @@ export const IdentityStore = signalStore(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
           exhaustMap((organizationId) =>
-            membershipRepository.getPartners(organizationId),
+            membershipRepository.getPartners(OrganizationId.create(organizationId)),
           ),
           tapResponse({
             next: (partners) => patchState(store, { partners, loading: false }),

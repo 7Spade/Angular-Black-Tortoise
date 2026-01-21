@@ -1,11 +1,11 @@
 import type { Bot } from '../entities/bot.entity';
+import type { BotId } from '../value-objects/bot-id.value-object';
 
 /**
  * BotRepository defines the contract for bot persistence.
  */
 export interface BotRepository {
-  getBots(): Promise<Bot[]>;
-  findById(botId: string): Promise<Bot | null>;
+  findById(botId: BotId): Promise<Bot | null>;
   save(bot: Bot): Promise<void>;
-  delete(botId: string): Promise<void>;
+  delete(botId: BotId): Promise<void>;
 }
