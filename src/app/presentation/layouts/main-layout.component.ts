@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@application/stores/auth.store';
 
 /**
@@ -160,7 +160,6 @@ import { AuthStore } from '@application/stores/auth.store';
 })
 export class MainLayoutComponent {
   readonly authStore = inject(AuthStore);
-  private readonly router = inject(Router);
 
   readonly sidenavOpened = signal(true);
 
@@ -170,6 +169,5 @@ export class MainLayoutComponent {
 
   onSignOut(): void {
     this.authStore.signOut();
-    this.router.navigate(['/auth/login']);
   }
 }

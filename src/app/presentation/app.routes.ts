@@ -1,22 +1,13 @@
 import { inject } from '@angular/core';
-import { Router, Routes } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Routes, Router } from '@angular/router';
+import { filter, map, take } from 'rxjs/operators';
 import { AuthSessionFacade } from '@application/facades/auth-session.facade';
 
 export const APP_ROUTES: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'login',
-  },
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./pages/auth/auth-page.component').then(
-        (module) => module.AuthPageComponent,
-      ),
-  },
-  {
-    path: 'login/:mode',
     loadComponent: () =>
       import('./pages/auth/auth-page.component').then(
         (module) => module.AuthPageComponent,
@@ -27,10 +18,13 @@ export const APP_ROUTES: Routes = [
     canActivate: [
       () => {
         const session = inject(AuthSessionFacade);
-        const snapshot = session.getSnapshot();
-        return snapshot.sessionReady && snapshot.isAuthenticated
-          ? true
-          : inject(Router).parseUrl('/login');
+        return toObservable(session.authStatus).pipe(
+          filter((status) => status !== 'initializing'),
+          take(1),
+          map((status) =>
+            status === 'authenticated' ? true : inject(Router).parseUrl('/login'),
+          ),
+        );
       },
     ],
     loadComponent: () =>
@@ -43,10 +37,13 @@ export const APP_ROUTES: Routes = [
     canActivate: [
       () => {
         const session = inject(AuthSessionFacade);
-        const snapshot = session.getSnapshot();
-        return snapshot.sessionReady && snapshot.isAuthenticated
-          ? true
-          : inject(Router).parseUrl('/login');
+        return toObservable(session.authStatus).pipe(
+          filter((status) => status !== 'initializing'),
+          take(1),
+          map((status) =>
+            status === 'authenticated' ? true : inject(Router).parseUrl('/login'),
+          ),
+        );
       },
     ],
     loadComponent: () =>
@@ -79,6 +76,9 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'login',
+    loadComponent: () =>
+      import('./pages/auth/auth-page.component').then(
+        (module) => module.AuthPageComponent,
+      ),
   },
 ];
