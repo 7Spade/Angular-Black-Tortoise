@@ -1,43 +1,48 @@
-import { Injectable, inject, signal } from '@angular/core';
-import {
-  SettingsDemoUseCase,
-  SettingsUpdateInput,
-  SettingsResetInput,
-} from '@application/use-cases/demo/settings-demo.use-case';
+import { Injectable, signal } from '@angular/core';
 
+/**
+ * Simplified demo facade - no overengineered use-case layer.
+ * Previously had a use-case that just returned mock objects with no I/O, async, or cross-aggregate logic.
+ * Now: direct signal state management for demo purposes.
+ */
 @Injectable({ providedIn: 'root' })
 export class SettingsDemoFacade {
-  private readonly useCase = inject(SettingsDemoUseCase);
-
   readonly workspaceId = signal<string | null>(null);
   readonly themePreference = signal<'system' | 'light' | 'dark'>('system');
   readonly locale = signal<string | null>(null);
   readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.loading.set(true);
-    const state = await this.useCase.loadState();
-    this.workspaceId.set(state.workspaceId);
-    this.themePreference.set(state.themePreference);
-    this.locale.set(state.locale);
+    // Demo initialization - no real I/O
+    this.workspaceId.set(null);
+    this.themePreference.set('system');
+    this.locale.set(null);
     this.loading.set(false);
   }
 
-  async updateSettings(input: SettingsUpdateInput): Promise<void> {
+  async updateSettings(input: {
+    workspaceId: string;
+    themePreference?: 'system' | 'light' | 'dark';
+    locale?: string;
+  }): Promise<void> {
+    // Demo settings update - would call real repository in production
     this.loading.set(true);
-    const state = await this.useCase.updateSettings(input);
-    this.workspaceId.set(state.workspaceId);
-    this.themePreference.set(state.themePreference);
-    this.locale.set(state.locale);
+    this.workspaceId.set(input.workspaceId);
+    if (input.themePreference) {
+      this.themePreference.set(input.themePreference);
+    }
+    if (input.locale) {
+      this.locale.set(input.locale);
+    }
     this.loading.set(false);
   }
 
-  async resetSettings(input: SettingsResetInput): Promise<void> {
+  async resetSettings(input: { workspaceId: string }): Promise<void> {
+    // Demo reset - would call real repository in production
     this.loading.set(true);
-    const state = await this.useCase.resetSettings(input);
-    this.workspaceId.set(state.workspaceId);
-    this.themePreference.set(state.themePreference);
-    this.locale.set(state.locale);
+    this.workspaceId.set(input.workspaceId);
+    this.themePreference.set('system');
+    this.locale.set(null);
     this.loading.set(false);
   }
 }

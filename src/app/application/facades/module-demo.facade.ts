@@ -1,43 +1,42 @@
-import { Injectable, inject, signal } from '@angular/core';
-import {
-  ModuleDemoUseCase,
-  ModuleSelectionInput,
-  ModuleRefreshInput,
-} from '@application/use-cases/demo/module-demo.use-case';
+import { Injectable, signal } from '@angular/core';
 
+/**
+ * Simplified demo facade - no overengineered use-case layer.
+ * Previously had a use-case that just returned mock objects with no I/O, async, or cross-aggregate logic.
+ * Now: direct signal state management for demo purposes.
+ */
 @Injectable({ providedIn: 'root' })
 export class ModuleDemoFacade {
-  private readonly useCase = inject(ModuleDemoUseCase);
-
   readonly workspaceId = signal<string | null>(null);
   readonly moduleKeys = signal<ReadonlyArray<string>>([]);
   readonly activeModuleKey = signal<string | null>(null);
   readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.loading.set(true);
-    const state = await this.useCase.loadState();
-    this.workspaceId.set(state.workspaceId);
-    this.moduleKeys.set(state.moduleKeys);
-    this.activeModuleKey.set(state.activeModuleKey);
+    // Demo initialization - no real I/O
+    this.workspaceId.set(null);
+    this.moduleKeys.set([]);
+    this.activeModuleKey.set(null);
     this.loading.set(false);
   }
 
-  async selectModule(input: ModuleSelectionInput): Promise<void> {
+  async selectModule(input: {
+    workspaceId: string;
+    moduleKey: string;
+  }): Promise<void> {
+    // Demo selection - would connect to real ModuleStore in production
     this.loading.set(true);
-    const state = await this.useCase.selectModule(input);
-    this.workspaceId.set(state.workspaceId);
-    this.moduleKeys.set(state.moduleKeys);
-    this.activeModuleKey.set(state.activeModuleKey);
+    this.workspaceId.set(input.workspaceId);
+    this.activeModuleKey.set(input.moduleKey);
     this.loading.set(false);
   }
 
-  async refreshModules(input: ModuleRefreshInput): Promise<void> {
+  async refreshModules(input: { workspaceId: string }): Promise<void> {
+    // Demo refresh - would call real repository in production
     this.loading.set(true);
-    const state = await this.useCase.refreshModules(input);
-    this.workspaceId.set(state.workspaceId);
-    this.moduleKeys.set(state.moduleKeys);
-    this.activeModuleKey.set(state.activeModuleKey);
+    this.workspaceId.set(input.workspaceId);
+    this.moduleKeys.set([]);
+    this.activeModuleKey.set(null);
     this.loading.set(false);
   }
 }

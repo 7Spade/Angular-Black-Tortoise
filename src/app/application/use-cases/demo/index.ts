@@ -1,5 +1,5 @@
-export * from './identity-demo.use-case';
-export * from './workspace-demo.use-case';
-export * from './module-demo.use-case';
-export * from './permission-demo.use-case';
-export * from './settings-demo.use-case';
+/**
+ * Demo use-cases have been removed as overengineered.
+ * They lacked I/O, async operations, and cross-aggregate logic.
+ * Trivial demo logic is now directly in facades.
+ */

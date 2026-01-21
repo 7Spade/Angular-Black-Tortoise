@@ -1,14 +1,14 @@
-import { Injectable, inject, signal } from '@angular/core';
-import {
-  WorkspaceDemoUseCase,
-  WorkspaceOwnerSelectionInput,
-  WorkspaceSelectionInput,
-} from '@application/use-cases/demo/workspace-demo.use-case';
+import { Injectable, signal } from '@angular/core';
 
+/**
+ * Simplified demo facade - no overengineered use-case layer.
+ * Previously had a use-case that just returned mock objects with no I/O, async, or cross-aggregate logic.
+ * Now: direct signal state management for demo purposes.
+ * 
+ * NOTE: Production workspace logic uses WorkspaceFacade + WorkspaceStore (real I/O).
+ */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceDemoFacade {
-  private readonly useCase = inject(WorkspaceDemoUseCase);
-
   readonly activeWorkspaceId = signal<string | null>(null);
   readonly ownerId = signal<string | null>(null);
   readonly ownerType = signal<'user' | 'organization' | null>(null);
@@ -16,32 +16,34 @@ export class WorkspaceDemoFacade {
   readonly loading = signal(false);
 
   async initialize(): Promise<void> {
-    this.loading.set(true);
-    const state = await this.useCase.loadState();
-    this.activeWorkspaceId.set(state.activeWorkspaceId);
-    this.ownerId.set(state.ownerId);
-    this.ownerType.set(state.ownerType);
-    this.moduleIds.set(state.moduleIds);
+    // Demo initialization - no real I/O
+    this.activeWorkspaceId.set(null);
+    this.ownerId.set(null);
+    this.ownerType.set(null);
+    this.moduleIds.set([]);
     this.loading.set(false);
   }
 
-  async selectOwner(input: WorkspaceOwnerSelectionInput): Promise<void> {
+  async selectOwner(input: {
+    ownerId: string;
+    ownerType: 'user' | 'organization';
+  }): Promise<void> {
+    // Demo owner selection - would connect to real WorkspaceStore in production
     this.loading.set(true);
-    const state = await this.useCase.selectOwner(input);
-    this.activeWorkspaceId.set(state.activeWorkspaceId);
-    this.ownerId.set(state.ownerId);
-    this.ownerType.set(state.ownerType);
-    this.moduleIds.set(state.moduleIds);
+    this.activeWorkspaceId.set(null);
+    this.ownerId.set(input.ownerId);
+    this.ownerType.set(input.ownerType);
+    this.moduleIds.set([]);
     this.loading.set(false);
   }
 
-  async selectWorkspace(input: WorkspaceSelectionInput): Promise<void> {
+  async selectWorkspace(input: { workspaceId: string }): Promise<void> {
+    // Demo workspace selection - would connect to real WorkspaceStore in production
     this.loading.set(true);
-    const state = await this.useCase.selectWorkspace(input);
-    this.activeWorkspaceId.set(state.activeWorkspaceId);
-    this.ownerId.set(state.ownerId);
-    this.ownerType.set(state.ownerType);
-    this.moduleIds.set(state.moduleIds);
+    this.activeWorkspaceId.set(input.workspaceId);
+    this.ownerId.set(null);
+    this.ownerType.set(null);
+    this.moduleIds.set([]);
     this.loading.set(false);
   }
 }
