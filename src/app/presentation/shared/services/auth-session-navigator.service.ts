@@ -11,7 +11,11 @@ export class AuthSessionNavigatorService {
     effect(() => {
       const snapshot = this.authSession.getSnapshot();
       if (snapshot.sessionReady) {
-        this.router.navigateByUrl(snapshot.isAuthenticated ? '/demo' : '/login');
+        this.router.navigateByUrl(
+          snapshot.isAuthenticated
+            ? '/demo/workspace/context-only/module-only'
+            : '/login',
+        );
       }
     });
   }

@@ -23,7 +23,7 @@ export const APP_ROUTES: Routes = [
       ),
   },
   {
-    path: 'demo',
+    path: 'demo/workspace/:workspaceId/:moduleId',
     canActivate: [
       () => {
         const session = inject(AuthSessionFacade);
