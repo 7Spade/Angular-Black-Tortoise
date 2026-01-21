@@ -16,9 +16,44 @@ export const APP_ROUTES: Routes = [
     path: 'app',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/dashboard/dashboard-page.component').then(
-        (module) => module.DashboardPageComponent,
+      import('./layouts/main-layout.component').then(
+        (module) => module.MainLayoutComponent
       ),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard-page.component').then(
+            (module) => module.DashboardPageComponent
+          ),
+      },
+      {
+        path: 'workspaces',
+        loadComponent: () =>
+          import('./pages/workspaces/workspaces-page.component').then(
+            (module) => module.WorkspacesPageComponent
+          ),
+      },
+      {
+        path: 'workspace/:id',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard-page.component').then(
+            (module) => module.DashboardPageComponent
+          ),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard-page.component').then(
+            (module) => module.DashboardPageComponent
+          ),
+      },
+    ],
   },
   {
     path: '**',

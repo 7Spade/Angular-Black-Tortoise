@@ -1,3 +1,5 @@
+import { randomString } from '@shared/utils/string.util';
+
 /**
  * WorkspaceId is a branded identifier for workspace entities.
  */
@@ -13,6 +15,15 @@ export class WorkspaceId {
       throw new Error('WorkspaceId cannot be empty');
     }
     return new WorkspaceId(value.trim());
+  }
+
+  /**
+   * Generate a new unique workspace ID.
+   */
+  static generate(): WorkspaceId {
+    const timestamp = Date.now().toString(36);
+    const random = randomString(8);
+    return new WorkspaceId(`ws_${timestamp}_${random}`);
   }
 
   getValue(): string {

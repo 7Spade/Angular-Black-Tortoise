@@ -4,41 +4,36 @@ import type { WorkspaceOwnerType } from '@domain/identity/identity.types';
  * WorkspaceOwner encapsulates workspace ownership information.
  */
 export class WorkspaceOwner {
-  private readonly ownerId: string;
-  private readonly ownerType: WorkspaceOwnerType;
+  readonly id: string;
+  readonly type: WorkspaceOwnerType;
 
-  private constructor(ownerId: string, ownerType: WorkspaceOwnerType) {
-    this.ownerId = ownerId;
-    this.ownerType = ownerType;
+  private constructor(id: string, type: WorkspaceOwnerType) {
+    this.id = id;
+    this.type = type;
   }
 
-  static create(ownerId: string, ownerType: WorkspaceOwnerType): WorkspaceOwner {
-    if (!ownerId || ownerId.trim().length === 0) {
-      throw new Error('WorkspaceOwner ownerId cannot be empty');
+  static create(props: {
+    id: string;
+    type: WorkspaceOwnerType;
+  }): WorkspaceOwner {
+    if (!props.id || props.id.trim().length === 0) {
+      throw new Error('WorkspaceOwner id cannot be empty');
     }
-    if (ownerType !== 'user' && ownerType !== 'organization') {
-      throw new Error('WorkspaceOwner ownerType must be user or organization');
+    if (props.type !== 'user' && props.type !== 'organization') {
+      throw new Error('WorkspaceOwner type must be user or organization');
     }
-    return new WorkspaceOwner(ownerId.trim(), ownerType);
-  }
-
-  getOwnerId(): string {
-    return this.ownerId;
-  }
-
-  getOwnerType(): WorkspaceOwnerType {
-    return this.ownerType;
+    return new WorkspaceOwner(props.id.trim(), props.type);
   }
 
   equals(other: WorkspaceOwner): boolean {
-    return this.ownerId === other.ownerId && this.ownerType === other.ownerType;
+    return this.id === other.id && this.type === other.type;
   }
 
   isUserOwned(): boolean {
-    return this.ownerType === 'user';
+    return this.type === 'user';
   }
 
   isOrganizationOwned(): boolean {
-    return this.ownerType === 'organization';
+    return this.type === 'organization';
   }
 }
