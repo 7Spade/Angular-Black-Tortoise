@@ -53,6 +53,10 @@ import { AuthStore } from '@application/stores/auth.store';
             <mat-icon matListItemIcon>folder</mat-icon>
             <span matListItemTitle>Workspaces</span>
           </a>
+          <a mat-list-item routerLink="/app/demo" routerLinkActive="active">
+            <mat-icon matListItemIcon>developer_mode</mat-icon>
+            <span matListItemTitle>Demo</span>
+          </a>
           <a mat-list-item routerLink="/app/settings" routerLinkActive="active">
             <mat-icon matListItemIcon>settings</mat-icon>
             <span matListItemTitle>Settings</span>

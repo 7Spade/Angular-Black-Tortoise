@@ -33,6 +33,13 @@ export const APP_ROUTES: Routes = [
           ),
       },
       {
+        path: 'demo',
+        loadComponent: () =>
+          import('./pages/demo/demo-page.component').then(
+            (module) => module.DemoPageComponent
+          ),
+      },
+      {
         path: 'workspaces',
         loadComponent: () =>
           import('./pages/workspaces/workspaces-page.component').then(
