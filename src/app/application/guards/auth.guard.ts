@@ -22,6 +22,11 @@ import { AuthSessionFacade } from '@application/facades/auth-session.facade';
  * 2. Allow or redirect based on status
  * 3. NO business logic
  * 4. Synchronous signal access only
+ * 
+ * Routing Logic:
+ * - Protected routes (/app/*) require authentication
+ * - Public routes (/demo, /auth) are always accessible
+ * - Unauthenticated users accessing protected routes -> redirect to /auth/login
  */
 export const authGuard: CanActivateFn = (_route, state) => {
   const facade = inject(AuthSessionFacade);
@@ -38,11 +43,6 @@ export const authGuard: CanActivateFn = (_route, state) => {
   
   // Allow access if authenticated
   if (status === 'authenticated') {
-    return true;
-  }
-  
-  // Allow access to auth pages (login, signup, etc.)
-  if (state.url.startsWith('/login') || state.url.startsWith('/auth')) {
     return true;
   }
   
