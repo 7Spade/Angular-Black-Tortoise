@@ -11,10 +11,15 @@ import { authGuard } from '@application/guards/auth.guard';
  * - Signals-only redirects (no component-driven navigation)
  * 
  * Routing Requirements:
- * - / -> /demo/ (default landing)
- * - /login -> /demo/ (login shortcut redirects to demo)
- * - /demo/workspace/default/default -> /demo/ (legacy default redirects)
- * - /demo/ is publicly accessible (no auth required)
+ * - / -> /demo (default landing)
+ * - /login -> /demo (login shortcut redirects to demo)
+ * - /demo/workspace/default/default -> /demo (legacy default redirects)
+ * - /demo is publicly accessible (no auth required)
+ * 
+ * Consolidation (Solution A):
+ * - Removed /dashboard route (merged into /demo)
+ * - Removed /home route (merged into /demo)
+ * - Single demo page handles all demo scenarios
  */
 export const APP_ROUTES: Routes = [
   {
@@ -71,17 +76,11 @@ export const APP_ROUTES: Routes = [
       },
       {
         path: 'workspace/:id',
-        loadComponent: () =>
-          import('./pages/dashboard/dashboard-page.component').then(
-            (module) => module.DashboardPageComponent,
-          ),
+        redirectTo: '/demo',
       },
       {
         path: 'settings',
-        loadComponent: () =>
-          import('./pages/dashboard/dashboard-page.component').then(
-            (module) => module.DashboardPageComponent,
-          ),
+        redirectTo: '/demo',
       },
     ],
   },

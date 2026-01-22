@@ -5,18 +5,22 @@ import { RouterModule, Routes } from '@angular/router';
 /**
  * Acceptance Module
  * 
- * Skeleton module for acceptance testing/approval feature.
- * Follows Angular 20 conventions with minimal NgModule structure.
+ * Architecture Compliance:
+ * - Routes point to entry component
+ * - Entry component handles layout/guard decisions
+ * - Follows Angular 20 conventions with standalone components
+ * - Minimal NgModule structure (legacy support)
  * 
- * Future: Add acceptance components, services, and business logic.
+ * Future: Migrate to standalone routes configuration
  */
 
 const routes: Routes = [
   {
     path: '',
-    children: [
-      // TODO: Add acceptance routes
-    ],
+    loadComponent: () =>
+      import('./acceptance-entry.component').then(
+        (m) => m.AcceptanceEntryComponent
+      ),
   },
 ];
 
